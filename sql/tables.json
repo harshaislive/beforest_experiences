@@ -1,0 +1,1466 @@
+[
+    {
+      "table_name": "confirmation_templates",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "confirmation_templates_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "type",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "CHECK",
+              "constraint_name": "confirmation_templates_type_check"
+            }
+          ]
+        },
+        {
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "content",
+          "data_type": "jsonb",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "is_active",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "column_default": "true",
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "confirmation_variables",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "confirmation_variables_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "description",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "example_value",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "event_food_options",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "event_food_options_event_id_fkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "event_food_options_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "event_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "description",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "price",
+          "data_type": "numeric",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "max_quantity",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "is_vegetarian",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "column_default": "false",
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "event_images",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "event_images_event_id_fkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "event_images_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "event_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "image_url",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "is_hero",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "column_default": "false",
+          "constraints": null
+        },
+        {
+          "column_name": "order",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "alt_text",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "event_itinerary",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "event_itinerary_event_id_fkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "event_itinerary_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "event_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "time",
+          "data_type": "time without time zone",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "activity",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "description",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "duration",
+          "data_type": "interval",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "order",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": "0",
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "event_pricing",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "event_pricing_event_id_fkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "event_pricing_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "event_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "category",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "CHECK",
+              "constraint_name": "event_pricing_category_check"
+            }
+          ]
+        },
+        {
+          "column_name": "price",
+          "data_type": "numeric",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "description",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "max_quantity",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "events",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "events_location_id_fkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "events_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "location_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "slug",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "UNIQUE",
+              "constraint_name": "events_slug_key"
+            }
+          ]
+        },
+        {
+          "column_name": "title",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "description",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "start_date",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "end_date",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "total_capacity",
+          "data_type": "integer",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "current_participants",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": "0",
+          "constraints": null
+        },
+        {
+          "column_name": "is_featured",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "column_default": "false",
+          "constraints": null
+        },
+        {
+          "column_name": "status",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "CHECK",
+              "constraint_name": "events_status_check"
+            }
+          ]
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "location_images",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "location_images_location_id_fkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "location_images_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "location_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "image_url",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "is_hero",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "column_default": "false",
+          "constraints": null
+        },
+        {
+          "column_name": "order",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "alt_text",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "locations",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "locations_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "slug",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "UNIQUE",
+              "constraint_name": "locations_slug_key"
+            }
+          ]
+        },
+        {
+          "column_name": "name",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "description",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "features",
+          "data_type": "jsonb",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "highlights",
+          "data_type": "jsonb",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "is_active",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "column_default": "true",
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "newsletter_subscriptions",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "newsletter_subscriptions_pkey"
+            },
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "newsletter_subscriptions_registration_id_fkey"
+            }
+          ]
+        },
+        {
+          "column_name": "email",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "UNIQUE",
+              "constraint_name": "newsletter_subscriptions_email_key"
+            }
+          ]
+        },
+        {
+          "column_name": "is_active",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "column_default": "true",
+          "constraints": null
+        },
+        {
+          "column_name": "source",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "CHECK",
+              "constraint_name": "newsletter_subscriptions_source_check"
+            }
+          ]
+        },
+        {
+          "column_name": "registration_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "subscribed_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "unsubscribed_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "payment_transactions",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "payment_transactions_pkey"
+            },
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "payment_transactions_registration_id_fkey"
+            }
+          ]
+        },
+        {
+          "column_name": "registration_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "transaction_id",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "UNIQUE",
+              "constraint_name": "payment_transactions_transaction_id_key"
+            }
+          ]
+        },
+        {
+          "column_name": "amount",
+          "data_type": "numeric",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "status",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "CHECK",
+              "constraint_name": "payment_transactions_status_check"
+            }
+          ]
+        },
+        {
+          "column_name": "payment_response",
+          "data_type": "jsonb",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "phonepay_config",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "phonepay_config_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "merchant_id",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "salt_key",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "is_production",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "column_default": "false",
+          "constraints": null
+        },
+        {
+          "column_name": "redirect_url",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "callback_url",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "registration_food_details",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "registration_food_details_food_option_id_fkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "registration_food_details_pkey"
+            },
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "registration_food_details_registration_id_fkey"
+            }
+          ]
+        },
+        {
+          "column_name": "registration_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "food_option_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "quantity",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "CHECK",
+              "constraint_name": "registration_food_details_quantity_check"
+            }
+          ]
+        },
+        {
+          "column_name": "amount",
+          "data_type": "numeric",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "registration_pricing_details",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "registration_pricing_details_pkey"
+            },
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "registration_pricing_details_pricing_id_fkey"
+            },
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "registration_pricing_details_registration_id_fkey"
+            }
+          ]
+        },
+        {
+          "column_name": "registration_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "pricing_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "quantity",
+          "data_type": "integer",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "CHECK",
+              "constraint_name": "registration_pricing_details_quantity_check"
+            }
+          ]
+        },
+        {
+          "column_name": "amount",
+          "data_type": "numeric",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "registrations",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "registrations_event_id_fkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "registrations_pkey"
+            },
+            {
+              "constraint_type": "FOREIGN KEY",
+              "constraint_name": "registrations_user_id_fkey"
+            }
+          ]
+        },
+        {
+          "column_name": "user_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "event_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "total_amount",
+          "data_type": "numeric",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "phonepay_transaction_id",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "payment_status",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "CHECK",
+              "constraint_name": "registrations_payment_status_check"
+            }
+          ]
+        },
+        {
+          "column_name": "payment_date",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "booking_details",
+          "data_type": "jsonb",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        }
+      ]
+    },
+    {
+      "table_name": "users",
+      "columns": [
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": "uuid_generate_v4()",
+          "constraints": [
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "users_pkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "users_pkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "users_pkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "users_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "instance_id",
+          "data_type": "uuid",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "id",
+          "data_type": "uuid",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "users_pkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "users_pkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "users_pkey"
+            },
+            {
+              "constraint_type": "PRIMARY KEY",
+              "constraint_name": "users_pkey"
+            }
+          ]
+        },
+        {
+          "column_name": "email",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "UNIQUE",
+              "constraint_name": "users_email_key"
+            }
+          ]
+        },
+        {
+          "column_name": "aud",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "full_name",
+          "data_type": "text",
+          "is_nullable": "NO",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "phone",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "UNIQUE",
+              "constraint_name": "users_phone_key"
+            }
+          ]
+        },
+        {
+          "column_name": "role",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "email",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": [
+            {
+              "constraint_type": "UNIQUE",
+              "constraint_name": "users_email_key"
+            }
+          ]
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": "now()",
+          "constraints": null
+        },
+        {
+          "column_name": "encrypted_password",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "email_confirmed_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "invited_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "confirmation_token",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "confirmation_sent_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "recovery_token",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "recovery_sent_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "email_change_token_new",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "email_change",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "email_change_sent_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "last_sign_in_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "raw_app_meta_data",
+          "data_type": "jsonb",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "raw_user_meta_data",
+          "data_type": "jsonb",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "is_super_admin",
+          "data_type": "boolean",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "created_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "updated_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "phone",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": "NULL::character varying",
+          "constraints": [
+            {
+              "constraint_type": "UNIQUE",
+              "constraint_name": "users_phone_key"
+            }
+          ]
+        },
+        {
+          "column_name": "phone_confirmed_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "phone_change",
+          "data_type": "text",
+          "is_nullable": "YES",
+          "column_default": "''::character varying",
+          "constraints": null
+        },
+        {
+          "column_name": "phone_change_token",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": "''::character varying",
+          "constraints": null
+        },
+        {
+          "column_name": "phone_change_sent_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "confirmed_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "email_change_token_current",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": "''::character varying",
+          "constraints": null
+        },
+        {
+          "column_name": "email_change_confirm_status",
+          "data_type": "smallint",
+          "is_nullable": "YES",
+          "column_default": "0",
+          "constraints": [
+            {
+              "constraint_type": "CHECK",
+              "constraint_name": "users_email_change_confirm_status_check"
+            }
+          ]
+        },
+        {
+          "column_name": "banned_until",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "reauthentication_token",
+          "data_type": "character varying",
+          "is_nullable": "YES",
+          "column_default": "''::character varying",
+          "constraints": null
+        },
+        {
+          "column_name": "reauthentication_sent_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "is_sso_user",
+          "data_type": "boolean",
+          "is_nullable": "NO",
+          "column_default": "false",
+          "constraints": null
+        },
+        {
+          "column_name": "deleted_at",
+          "data_type": "timestamp with time zone",
+          "is_nullable": "YES",
+          "column_default": null,
+          "constraints": null
+        },
+        {
+          "column_name": "is_anonymous",
+          "data_type": "boolean",
+          "is_nullable": "NO",
+          "column_default": "false",
+          "constraints": null
+        }
+      ]
+    }
+  ]
