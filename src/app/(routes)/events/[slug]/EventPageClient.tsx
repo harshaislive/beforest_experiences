@@ -28,7 +28,7 @@ export default function EventPageClient({ event, capacity }: EventPageClientProp
   return (
     <main className="min-h-screen bg-sage-50">
       {/* Hero Section */}
-      <section className="relative h-[60vh] min-h-[400px]">
+      <section className="relative h-[70vh] min-h-[500px]">
         <div className="absolute inset-0">
           <Image
             src={event.event_images[0]?.image_url || '/images/event-placeholder.jpg'}
@@ -37,23 +37,36 @@ export default function EventPageClient({ event, capacity }: EventPageClientProp
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-black/30" />
         </div>
-        <div className="relative container mx-auto px-4 h-full flex items-end pb-12">
+        <div className="relative container mx-auto px-4 h-full flex items-end pb-16">
           <div className="max-w-3xl">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
               {event.title}
             </h1>
-            <div className="flex items-center gap-2 text-white/90">
-              <MapPinIcon className="w-5 h-5" />
-              <span>{event.locations?.name || 'Location TBA'}</span>
+            <p className="text-xl text-white/90 mb-8 max-w-2xl">
+              {event.description}
+            </p>
+            <div className="flex items-center gap-4 text-white/90">
+              <div className="flex items-center gap-2">
+                <MapPinIcon className="w-5 h-5" />
+                <span>{event.locations?.name || 'Location TBA'}</span>
+              </div>
+              {isAvailable && (
+                <button
+                  onClick={() => setBookingModalOpen(true)}
+                  className="bg-terracotta hover:bg-terracotta/90 text-white px-6 py-3 rounded-lg font-medium transition-colors hidden md:block"
+                >
+                  Book Now
+                </button>
+              )}
             </div>
           </div>
         </div>
       </section>
 
       {/* Event Details */}
-      <section className="py-12">
+      <section className="py-16">
         <div className="container mx-auto px-4">
           <div className="max-w-7xl mx-auto">
             <EventDetails
@@ -65,7 +78,7 @@ export default function EventPageClient({ event, capacity }: EventPageClientProp
               date={event.start_date}
               endDate={event.end_date}
               capacity={capacity}
-              isAvailable={capacity.available > 0}
+              isAvailable={isAvailable}
               onBookingClick={() => setBookingModalOpen(true)}
               schedule={event.itinerary?.map(item => ({
                 time: item.time,
@@ -87,8 +100,9 @@ export default function EventPageClient({ event, capacity }: EventPageClientProp
         capacity={capacity}
       />
 
+      {/* Mobile Booking Button */}
       {isAvailable && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg transform lg:hidden">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg md:hidden">
           <div className="container mx-auto px-4 py-4">
             <button
               className="w-full bg-terracotta hover:bg-terracotta/90 text-white px-8 py-4 rounded-lg font-medium text-lg transition-colors"

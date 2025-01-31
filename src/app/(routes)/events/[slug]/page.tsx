@@ -68,9 +68,41 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
 
     const event = await getEvent(params.slug);
+    if (!event) {
+        return {
+            title: 'Event Not Found',
+            description: 'The requested event could not be found.'
+        };
+    }
+
+    const eventDate = new Date(event.start_date).toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
     return {
-        title: event?.title || 'Event',
-        description: event?.description || 'Event details'
+        title: `${event.title} - ${eventDate} | Beforest`,
+        description: event.description,
+        openGraph: {
+            title: event.title,
+            description: event.description,
+            images: event.event_images?.[0]?.image_url ? [
+                {
+                    url: event.event_images[0].image_url,
+                    width: 1200,
+                    height: 630,
+                    alt: event.title
+                }
+            ] : undefined,
+            type: 'website',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title: event.title,
+            description: event.description,
+            images: event.event_images?.[0]?.image_url ? [event.event_images[0].image_url] : undefined,
+        }
     };
 }
 

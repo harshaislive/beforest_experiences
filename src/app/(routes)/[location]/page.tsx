@@ -44,50 +44,60 @@ const transformEventData = (event: any): Event => ({
 
 export default async function LocationPage({ params }: LocationPageProps) {
   const locationData = await getLocation(params.location);
-  const { upcomingEvents, pastEvents } = await getLocationEvents(params.location);
-
   if (!locationData) {
     notFound();
   }
 
+  const { upcomingEvents: rawUpcomingEvents, pastEvents: rawPastEvents } = await getLocationEvents(locationData.id);
+
+  // Transform event data
+  const upcomingEvents = rawUpcomingEvents.map(transformEventData);
+  const pastEvents = rawPastEvents.map(transformEventData);
+
   console.log('Location Data:', {
     name: locationData.name,
     features: locationData.features,
-    highlights: locationData.highlights
+    highlights: locationData.highlights,
+    upcomingEventsCount: upcomingEvents.length,
+    pastEventsCount: pastEvents.length
   });
 
   const heroImage = locationData.location_images?.find(
     (img: { is_hero?: boolean }) => img.is_hero
   )?.image_url || locationData.location_images?.[0]?.image_url;
 
+  const hasEvents = upcomingEvents.length > 0;
+
   return (
-    <>
+    <main className="min-h-screen">
       <LocationHero
         name={locationData.name}
         slug={locationData.slug}
         description={locationData.description}
         imageUrl={heroImage}
-        hasEvents={upcomingEvents.length > 0}
+        hasEvents={hasEvents}
       />
+
+      {hasEvents && (
+        <LocationUpcomingEvents
+          name={locationData.name}
+          events={upcomingEvents}
+        />
+      )}
 
       <LocationOverview
         name={locationData.name}
         features={locationData.features || []}
         highlights={locationData.highlights || []}
-        hasEvents={upcomingEvents.length > 0}
-      />
-
-      <LocationUpcomingEvents
-        name={locationData.name}
-        events={upcomingEvents.map(transformEventData)}
+        hasEvents={hasEvents}
       />
 
       {pastEvents.length > 0 && (
         <LocationPastEvents
           name={locationData.name}
-          events={pastEvents.map(transformEventData)}
+          events={pastEvents}
         />
       )}
-    </>
+    </main>
   );
 }

@@ -483,9 +483,12 @@ export async function getLocationEvents(locationId: string): Promise<{ upcomingE
         const utcDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
         const currentDate = utcDate.toISOString();
         
-        console.log('[getLocationEvents] Raw current time:', new Date().toISOString());
-        console.log('[getLocationEvents] UTC midnight:', currentDate);
-        console.log('[getLocationEvents] Fetching events with status: upcoming');
+        console.log('[getLocationEvents] Starting to fetch events:', {
+            locationId,
+            currentDate,
+            rawCurrentTime: new Date().toISOString(),
+            utcMidnight: currentDate
+        });
 
         const { data, error } = await supabase
             .from('events')
@@ -498,7 +501,7 @@ export async function getLocationEvents(locationId: string): Promise<{ upcomingE
                 event_itinerary (*)
             `)
             .eq('location_id', locationId)
-            .eq('status', 'upcoming')
+            .in('status', ['upcoming', 'published'])  // Include both upcoming and published events
             .order('start_date', { ascending: true });
 
         if (error) {
@@ -516,12 +519,17 @@ export async function getLocationEvents(locationId: string): Promise<{ upcomingE
             return { upcomingEvents: [], pastEvents: [] };
         }
 
-        console.log('[getLocationEvents] Raw events:', data.map(event => ({
-            id: event.id,
-            title: event.title,
-            startDate: event.start_date,
-            status: event.status
-        })));
+        console.log('[getLocationEvents] Raw events data:', {
+            totalEvents: data.length,
+            events: data.map(e => ({
+                id: e.id,
+                title: e.title,
+                startDate: e.start_date,
+                endDate: e.end_date,
+                status: e.status,
+                locationId: e.location_id
+            }))
+        });
 
         const transformedEvents = data.map((event: DatabaseEvent) => {
             const { event_pricing, event_food_options, event_itinerary, ...rest } = event;
@@ -535,36 +543,35 @@ export async function getLocationEvents(locationId: string): Promise<{ upcomingE
             } as Event;
         });
 
-        // Convert currentDate to Date object for comparison
-        const currentDateObj = new Date(currentDate);
-        
-        // Split events into upcoming and past using UTC date comparison
+        // Split events into upcoming and past based on end_date
         const upcomingEvents = transformedEvents.filter(event => {
-            const eventDate = new Date(event.start_date);
-            console.log('[getLocationEvents] Comparing dates:', {
-                event: event.title,
-                eventDate: eventDate.toISOString(),
-                currentDate: currentDateObj.toISOString(),
-                isUpcoming: eventDate >= currentDateObj
+            const eventEndDate = new Date(event.end_date);
+            const isUpcoming = eventEndDate >= utcDate;
+            console.log('[getLocationEvents] Event date check:', {
+                eventId: event.id,
+                title: event.title,
+                endDate: event.end_date,
+                currentDate,
+                isUpcoming
             });
-            return eventDate >= currentDateObj;
-        });
-        
-        const pastEvents = transformedEvents.filter(event => {
-            const eventDate = new Date(event.start_date);
-            return eventDate < currentDateObj;
+            return isUpcoming;
         });
 
-        console.log('[getLocationEvents] Events split:', {
+        const pastEvents = transformedEvents.filter(event => {
+            const eventEndDate = new Date(event.end_date);
+            return eventEndDate < utcDate;
+        });
+
+        console.log('[getLocationEvents] Final events split:', {
             locationId,
             totalEvents: data.length,
             upcomingCount: upcomingEvents.length,
             pastCount: pastEvents.length,
-            currentDate,
             upcomingEvents: upcomingEvents.map(e => ({
                 id: e.id,
                 title: e.title,
                 startDate: e.start_date,
+                endDate: e.end_date,
                 status: e.status
             }))
         });
