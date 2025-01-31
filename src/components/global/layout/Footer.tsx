@@ -82,19 +82,19 @@ export default function Footer() {
               <p className="text-soft-beige/80 mb-6">
                 Stay updated with our latest experiences and community stories.
               </p>
-              <form onSubmit={handleSubmit} className="flex gap-3">
+              <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
                 <input
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="flex-1 px-4 py-3 bg-deep-brown text-soft-beige rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta text-sm"
+                  className="flex-1 px-4 py-3 bg-deep-brown text-soft-beige rounded-lg focus:outline-none focus:ring-2 focus:ring-terracotta text-sm min-w-0"
                   required
                 />
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="bg-terracotta text-soft-beige px-6 py-3 rounded-lg hover:bg-terracotta-light transition-colors text-sm font-medium flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  className="px-6 py-3 bg-terracotta text-soft-beige rounded-lg hover:bg-terracotta-light transition-colors text-sm font-medium flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   {isSubmitting ? 'Subscribing...' : 'Subscribe'}
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
