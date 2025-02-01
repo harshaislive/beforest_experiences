@@ -25,10 +25,10 @@ const supabase = createClient(
 
 // Initialize PhonePe gateway
 const gateway = new PhonepeGateway({
-    merchantId: 'PGTESTPAYUAT',
+    merchantId: process.env.PHONEPE_MERCHANT_ID!,
     saltKey: requiredEnvVars.PHONEPE_SALT_KEY!,
     saltIndex: parseInt(requiredEnvVars.PHONEPE_SALT_INDEX, 10),
-    isDev: true  // Force sandbox mode
+    isDev: process.env.NODE_ENV !== 'production'
 });
 
 export async function POST(

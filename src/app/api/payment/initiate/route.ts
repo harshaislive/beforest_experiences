@@ -33,17 +33,17 @@ const supabase = createClient(
 
 // Initialize PhonePe gateway
 const gateway = new PhonepeGateway({
-    merchantId: 'PGTESTPAYUAT',
+    merchantId: process.env.PHONEPE_MERCHANT_ID!,
     saltKey: process.env.PHONEPE_SALT_KEY!,
     saltIndex: parseInt(process.env.PHONEPE_SALT_INDEX || '1', 10),
-    isDev: true  // Force sandbox mode
+    isDev: process.env.NODE_ENV !== 'production'
 });
 
 // Add debug logging for gateway configuration
 console.log('PhonePe Gateway Configuration:', {
-    isDev: true,  // Always sandbox
-    environment: 'sandbox',
-    merchantId: 'PGTESTPAYUAT',
+    isDev: process.env.NODE_ENV !== 'production',
+    environment: process.env.NODE_ENV !== 'production' ? 'sandbox' : 'production',
+    merchantId: process.env.PHONEPE_MERCHANT_ID,
     hasSaltKey: true,
     saltIndex: parseInt(process.env.PHONEPE_SALT_INDEX || '1', 10)
 });
