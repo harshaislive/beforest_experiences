@@ -9,15 +9,20 @@ export interface SummaryProps {
         location: {
             name: string;
         };
-        event_pricing: Array<{
+        experience_pricing: Array<{
             id: string;
-            name: string;
+            category: string;
             price: number;
+            description: string;
+            max_quantity: number;
         }>;
-        event_food_options: Array<{
+        experience_food_options: Array<{
             id: string;
             name: string;
+            description: string;
             price: number;
+            max_quantity: number;
+            is_vegetarian: boolean;
         }>;
     };
     pricing: Array<{
@@ -47,12 +52,12 @@ export default function Summary({
     }, [onSubmit]);
 
     const pricingTotal = pricing.reduce((sum, item) => {
-        const price = event.event_pricing.find(p => p.id === item.id);
+        const price = event.experience_pricing.find(p => p.id === item.id);
         return sum + (price ? price.price * item.quantity : 0);
     }, 0);
 
     const foodTotal = food.reduce((sum, item) => {
-        const foodOption = event.event_food_options.find(f => f.id === item.id);
+        const foodOption = event.experience_food_options.find(f => f.id === item.id);
         return sum + (foodOption ? foodOption.price * item.quantity : 0);
     }, 0);
 
@@ -95,7 +100,7 @@ export default function Summary({
                 </h3>
                 <div className="space-y-2">
                     {pricing.map(item => {
-                        const price = event.event_pricing.find(p => p.id === item.id);
+                        const price = event.experience_pricing.find(p => p.id === item.id);
                         if (!price) return null;
                         
                         return (
@@ -105,7 +110,7 @@ export default function Summary({
                             >
                                 <div>
                                     <p className="font-medium text-deep-brown">
-                                        {price.name}
+                                        {price.category}
                                     </p>
                                     <p className="text-sm text-deep-brown/70">
                                         ₹{price.price.toLocaleString()} × {item.quantity}
@@ -128,7 +133,7 @@ export default function Summary({
                     </h3>
                     <div className="space-y-2">
                         {food.map(item => {
-                            const foodOption = event.event_food_options.find(f => f.id === item.id);
+                            const foodOption = event.experience_food_options.find(f => f.id === item.id);
                             if (!foodOption) return null;
                             
                             return (

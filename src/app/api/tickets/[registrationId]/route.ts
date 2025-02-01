@@ -26,15 +26,20 @@ export async function GET(
                     location: locations (
                         name
                     ),
-                    event_pricing (
+                    experience_pricing (
                         id,
                         category,
-                        price
+                        price,
+                        description,
+                        max_quantity
                     ),
-                    event_food_options (
+                    experience_food_options (
                         id,
                         name,
-                        price
+                        description,
+                        price,
+                        max_quantity,
+                        is_vegetarian
                     )
                 ),
                 booking_details,
@@ -154,7 +159,7 @@ export async function GET(
             doc.text('Tickets:', 25, detailsY);
             detailsY += 8;
             registration.booking_details.tickets.forEach((ticket: any) => {
-                const ticketType = registration.events.event_pricing.find((p: any) => p.id === ticket.id);
+                const ticketType = registration.events.experience_pricing.find((p: any) => p.id === ticket.id);
                 doc.text(`• ${ticket.quantity}x ${ticketType?.category || 'Standard Ticket'}`, 30, detailsY);
                 detailsY += 6;
             });
@@ -166,7 +171,7 @@ export async function GET(
             doc.text('Food Items:', 25, detailsY);
             detailsY += 8;
             registration.booking_details.food_items.forEach((item: any) => {
-                const foodItem = registration.events.event_food_options.find((f: any) => f.id === item.id);
+                const foodItem = registration.events.experience_food_options.find((f: any) => f.id === item.id);
                 doc.text(`• ${item.quantity}x ${foodItem?.name || 'Food Item'}`, 30, detailsY);
                 detailsY += 6;
             });

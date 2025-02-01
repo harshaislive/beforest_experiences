@@ -86,7 +86,7 @@ export default function LocationHero({ name, slug, description, imageUrl, hasEve
               >
                 {hasEvents && (
                   <Link 
-                    href="#upcoming-events" 
+                    href="#upcoming-experiences" 
                     className="px-8 py-4 bg-white text-deep-brown rounded-full hover:bg-white/90 transition-colors text-lg font-medium"
                   >
                     View Events

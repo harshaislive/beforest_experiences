@@ -2,7 +2,13 @@ import { getAllLocations } from '@/lib/supabase';
 import { Location } from '@/lib/types';
 import LocationCard from '@/components/global/Locations/LocationCard';
 import { Suspense } from 'react';
-import { ErrorCardClient } from './LocationsSectionClient';
+
+// Error card component
+const ErrorCard = ({ message }: { message: string }) => (
+    <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+        <p className="text-red-600">{message}</p>
+    </div>
+);
 
 // Separate loading component
 const LoadingCard = () => (
@@ -57,7 +63,7 @@ export default async function LocationsSection() {
         return (
             <section className="py-24 bg-sage">
                 <div className="container mx-auto px-4">
-                    <ErrorCardClient message="Unable to load locations" />
+                    <ErrorCard message="Unable to load locations" />
                 </div>
             </section>
         );

@@ -2,11 +2,43 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/supabase';
 import type { Event, Location, EventItinerary, DatabaseEvent } from './types';
 
-// Create a singleton Supabase client for public access
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Validate client-side environment variables
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_URL is required');
+}
 
+if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is required');
+}
+
+// Create a singleton Supabase client for public access
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Client instance (public)
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
+
+// Server instance (admin) - only available in server components
+export const createServerSupabaseClient = () => {
+    if (typeof window !== 'undefined') {
+        throw new Error('Server-side Supabase client cannot be used in browser');
+    }
+    
+    if (!process.env.SUPABASE_SERVICE_KEY) {
+        throw new Error('SUPABASE_SERVICE_KEY is required for server operations');
+    }
+
+    return createClient<Database>(
+        supabaseUrl,
+        process.env.SUPABASE_SERVICE_KEY,
+        {
+            auth: {
+                persistSession: false,
+                autoRefreshToken: false
+            }
+        }
+    );
+};
 
 // Public data fetching functions
 export async function getEvent(slug: string): Promise<Event | null> {
@@ -14,19 +46,19 @@ export async function getEvent(slug: string): Promise<Event | null> {
         console.log('[getEvent] Fetching event with slug:', slug);
         
         const { data, error } = await supabase
-            .from('events')
+            .from('experiences')
             .select(`
                 *,
                 locations (*),
-                event_images (*),
-                event_pricing (
+                experience_images (*),
+                experience_pricing (
                     id,
                     category,
                     price,
                     description,
                     max_quantity
                 ),
-                event_food_options (
+                experience_food_options (
                     id,
                     name,
                     description,
@@ -34,7 +66,7 @@ export async function getEvent(slug: string): Promise<Event | null> {
                     max_quantity,
                     is_vegetarian
                 ),
-                event_itinerary (
+                experience_itinerary (
                     id,
                     time,
                     activity,
@@ -66,18 +98,18 @@ export async function getEvent(slug: string): Promise<Event | null> {
             title: data.title,
             status: data.status,
             start_date: data.start_date,
-            itinerary: data.event_itinerary
+            itinerary: data.experience_itinerary
         });
 
         const eventData = data as DatabaseEvent;
 
         // Transform the data to match the Event interface
-        const { event_pricing, event_food_options, event_itinerary, ...rest } = eventData;
+        const { experience_pricing, experience_food_options, experience_itinerary, ...rest } = eventData;
         const transformedData: Event = {
             ...rest,
-            pricing_options: event_pricing || [],
-            food_options: event_food_options || [],
-            itinerary: (event_itinerary || []).map((item: EventItinerary) => ({
+            pricing_options: experience_pricing || [],
+            food_options: experience_food_options || [],
+            itinerary: (experience_itinerary || []).map((item: EventItinerary) => ({
                 ...item
             })).sort((a: EventItinerary, b: EventItinerary) => a.order - b.order)
         };
@@ -94,14 +126,14 @@ export async function getEvents(): Promise<Event[]> {
         console.log('[getEvents] Fetching all events');
         
         const { data, error } = await supabase
-            .from('events')
+            .from('experiences')
             .select(`
                 *,
                 locations (*),
-                event_images (*),
-                event_pricing (*),
-                event_food_options (*),
-                event_itinerary (*)
+                experience_images (*),
+                experience_pricing (*),
+                experience_food_options (*),
+                experience_itinerary (*)
             `)
             .order('start_date', { ascending: true });
 
@@ -123,12 +155,12 @@ export async function getEvents(): Promise<Event[]> {
 
         // Transform each event to match the Event interface
         const transformedData = data.map((event: DatabaseEvent) => {
-            const { event_pricing, event_food_options, event_itinerary, ...rest } = event;
+            const { experience_pricing, experience_food_options, experience_itinerary, ...rest } = event;
             return {
                 ...rest,
-                pricing_options: event_pricing || [],
-                food_options: event_food_options || [],
-                itinerary: (event_itinerary || []).map((item: EventItinerary) => ({
+                pricing_options: experience_pricing || [],
+                food_options: experience_food_options || [],
+                itinerary: (experience_itinerary || []).map((item: EventItinerary) => ({
                     ...item
                 })).sort((a: EventItinerary, b: EventItinerary) => a.order - b.order)
             } as Event;
@@ -214,7 +246,7 @@ export async function getLocations(): Promise<Location[]> {
 
 export async function checkEventCapacity(eventId: string) {
     const { data, error } = await supabase
-        .from('events')
+        .from('experiences')
         .select('total_capacity, current_participants')
         .eq('id', eventId)
         .single();
@@ -247,14 +279,14 @@ export async function getUpcomingEvents(limit: number = 3): Promise<Event[]> {
         });
         
         const { data, error } = await supabase
-            .from('events')
+            .from('experiences')
             .select(`
                 *,
                 locations (*),
-                event_images (*),
-                event_pricing (*),
-                event_food_options (*),
-                event_itinerary (*)
+                experience_images (*),
+                experience_pricing (*),
+                experience_food_options (*),
+                experience_itinerary (*)
             `)
             .gte('start_date', currentDate)
             .eq('status', 'upcoming')
@@ -284,12 +316,12 @@ export async function getUpcomingEvents(limit: number = 3): Promise<Event[]> {
         })));
 
         return data.map((event: DatabaseEvent) => {
-            const { event_pricing, event_food_options, event_itinerary, ...rest } = event;
+            const { experience_pricing, experience_food_options, experience_itinerary, ...rest } = event;
             return {
                 ...rest,
-                pricing_options: event_pricing || [],
-                food_options: event_food_options || [],
-                itinerary: (event_itinerary || []).map((item: EventItinerary) => ({
+                pricing_options: experience_pricing || [],
+                food_options: experience_food_options || [],
+                itinerary: (experience_itinerary || []).map((item: EventItinerary) => ({
                     ...item
                 })).sort((a: EventItinerary, b: EventItinerary) => a.order - b.order)
             } as Event;
@@ -306,13 +338,13 @@ export async function getFeaturedEvent(): Promise<Event | null> {
     try {
         // First try to get featured upcoming events
         const { data: featuredData, error: featuredError } = await supabase
-            .from('events')
+            .from('experiences')
             .select(`
                 *,
                 locations (*),
-                event_images (*),
-                event_pricing (*),
-                event_food_options (*)
+                experience_images (*),
+                experience_pricing (*),
+                experience_food_options (*)
             `)
             .eq('is_featured', true)
             .gt('start_date', currentDate)
@@ -326,13 +358,13 @@ export async function getFeaturedEvent(): Promise<Event | null> {
 
         // If no featured event, get the nearest non-featured event
         const { data, error } = await supabase
-            .from('events')
+            .from('experiences')
             .select(`
                 *,
                 locations (*),
-                event_images (*),
-                event_pricing (*),
-                event_food_options (*)
+                experience_images (*),
+                experience_pricing (*),
+                experience_food_options (*)
             `)
             .gt('start_date', currentDate)
             .order('start_date', { ascending: true })
@@ -361,14 +393,14 @@ export async function getNearestUpcomingEvent(): Promise<Event | null> {
         console.log('[getNearestUpcomingEvent] Fetching events with status: upcoming');
 
         const { data, error } = await supabase
-            .from('events')
+            .from('experiences')
             .select(`
                 *,
                 locations (*),
-                event_images (*),
-                event_pricing (*),
-                event_food_options (*),
-                event_itinerary (*)
+                experience_images (*),
+                experience_pricing (*),
+                experience_food_options (*),
+                experience_itinerary (*)
             `)
             .eq('status', 'upcoming')
             .gte('start_date', currentDate)
@@ -402,12 +434,12 @@ export async function getNearestUpcomingEvent(): Promise<Event | null> {
             locationId: data.location_id
         });
 
-        const { event_pricing, event_food_options, event_itinerary, ...rest } = data;
+        const { experience_pricing, experience_food_options, experience_itinerary, ...rest } = data;
         return {
             ...rest,
-            pricing_options: event_pricing || [],
-            food_options: event_food_options || [],
-            itinerary: (event_itinerary || []).map((item: EventItinerary) => ({
+            pricing_options: experience_pricing || [],
+            food_options: experience_food_options || [],
+            itinerary: (experience_itinerary || []).map((item: EventItinerary) => ({
                 ...item
             })).sort((a: EventItinerary, b: EventItinerary) => a.order - b.order)
         } as Event;
@@ -418,7 +450,7 @@ export async function getNearestUpcomingEvent(): Promise<Event | null> {
 }
 
 interface LocationWithEvents extends Location {
-    events?: Array<{
+    experiences?: Array<{
         id: string;
         start_date: string;
         status: string;
@@ -435,7 +467,7 @@ export async function getAllLocations(): Promise<Location[]> {
             .select(`
                 *,
                 location_images (*),
-                events!location_id (
+                experiences!location_id (
                     id,
                     start_date,
                     status
@@ -456,15 +488,15 @@ export async function getAllLocations(): Promise<Location[]> {
 
         // Transform the data to include event counts
         return (locations as LocationWithEvents[]).map(location => {
-            const upcomingEvents = (location.events || []).filter(event => 
+            const upcomingEvents = (location.experiences || []).filter(event => 
                 event.start_date >= currentDate && 
-                event.status === 'published'
+                event.status === 'upcoming'
             );
 
-            const { events, ...locationData } = location;
+            const { experiences, ...locationData } = location;
             return {
                 ...locationData,
-                event_count: (location.events || []).length,
+                event_count: (location.experiences || []).length,
                 upcoming_event_count: upcomingEvents.length,
                 features: location.features || [],
                 highlights: location.highlights || []
@@ -491,14 +523,14 @@ export async function getLocationEvents(locationId: string): Promise<{ upcomingE
         });
 
         const { data, error } = await supabase
-            .from('events')
+            .from('experiences')
             .select(`
                 *,
                 locations (*),
-                event_images (*),
-                event_pricing (*),
-                event_food_options (*),
-                event_itinerary (*)
+                experience_images (*),
+                experience_pricing (*),
+                experience_food_options (*),
+                experience_itinerary (*)
             `)
             .eq('location_id', locationId)
             .in('status', ['upcoming', 'published'])  // Include both upcoming and published events
@@ -532,12 +564,12 @@ export async function getLocationEvents(locationId: string): Promise<{ upcomingE
         });
 
         const transformedEvents = data.map((event: DatabaseEvent) => {
-            const { event_pricing, event_food_options, event_itinerary, ...rest } = event;
+            const { experience_pricing, experience_food_options, experience_itinerary, ...rest } = event;
             return {
                 ...rest,
-                pricing_options: event_pricing || [],
-                food_options: event_food_options || [],
-                itinerary: (event_itinerary || []).map((item: EventItinerary) => ({
+                pricing_options: experience_pricing || [],
+                food_options: experience_food_options || [],
+                itinerary: (experience_itinerary || []).map((item: EventItinerary) => ({
                     ...item
                 })).sort((a: EventItinerary, b: EventItinerary) => a.order - b.order)
             } as Event;
@@ -588,13 +620,13 @@ export async function getPastEvents(limit: number = 6): Promise<Event[]> {
     
     try {
         const { data, error } = await supabase
-            .from('events')
+            .from('experiences')
             .select(`
                 *,
                 locations (*),
-                event_images (*),
-                event_pricing (*),
-                event_food_options (*)
+                experience_images (*),
+                experience_pricing (*),
+                experience_food_options (*)
             `)
             .lt('end_date', currentDate)
             .order('start_date', { ascending: false })

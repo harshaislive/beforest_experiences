@@ -5,7 +5,11 @@ import Link from 'next/link';
 import { useLocations } from '@/contexts/LocationContext';
 import { getRandomIcon } from '@/config/locationIcons';
 
-export default function LocationsDropdown() {
+interface LocationsDropdownProps {
+    className?: string;
+}
+
+export default function LocationsDropdown({ className = "text-sm" }: LocationsDropdownProps) {
     const { locations, isLoading } = useLocations();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -36,7 +40,7 @@ export default function LocationsDropdown() {
 
     if (isLoading) {
         return (
-            <div className="text-deep-brown/50 text-sm flex items-center gap-2">
+            <div className={`text-deep-brown/50 flex items-center gap-2 ${className}`}>
                 <svg className="animate-spin h-4 w-4 text-terracotta" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -47,14 +51,14 @@ export default function LocationsDropdown() {
     }
 
     if (!locations || locations.length === 0) {
-        return <div className="text-deep-brown/50 text-sm">No locations available</div>;
+        return <div className={`text-deep-brown/50 ${className}`}>No locations available</div>;
     }
 
     return (
         <div className="relative" ref={dropdownRef}>
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-2 text-deep-brown hover:text-terracotta transition-colors font-medium text-sm tracking-wide"
+                className={`flex items-center gap-2 text-deep-brown hover:text-terracotta transition-colors font-medium tracking-wide ${className}`}
                 aria-expanded={isOpen}
             >
                 <span>Locations</span>
@@ -83,7 +87,7 @@ export default function LocationsDropdown() {
                             <Link
                                 key={location.slug}
                                 href={`/${location.slug}`}
-                                className="flex items-center gap-3 px-4 py-3 text-sm text-deep-brown hover:bg-sage-50 transition-colors"
+                                className={`flex items-center gap-3 px-4 py-3 text-deep-brown hover:bg-sage-50 transition-colors ${className}`}
                                 onClick={() => setIsOpen(false)}
                             >
                                 <svg

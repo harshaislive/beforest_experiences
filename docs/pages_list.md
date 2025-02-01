@@ -2,14 +2,14 @@
 
 ## Main Pages
 - `/` - Homepage
-- `/events` - All Events Listing
+- `/experiences` - All Experiences Listing
 - `/coorg` - Coorg Location Page
 - `/hyderabad` - Hyderabad Location Page
 - `/newsletter` - Newsletter Signup
 
-## Event Pages
-- `/events/astrophotography-jan-2024` - Astrophotography Night Event
-- `/events/coffee-harvesting-february-2024` - Coffee Harvesting Event
+## Experience Pages
+- `/experiences/astrophotography-jan-2024` - Astrophotography Night Experience
+- `/experiences/coffee-harvesting-february-2024` - Coffee Harvesting Experience
 
 ## Auth Pages
 - `/login` - Login Page
@@ -24,8 +24,8 @@
 
 ## Admin Pages
 - `/admin` - Admin Dashboard
-- `/admin/events` - Events Management
-- `/admin/events/[id]` - Edit Event
+- `/admin/experiences` - Experiences Management
+- `/admin/experiences/[id]` - Edit Experience
 
 ## API Routes
 - `/api/payment/initiate` - Payment Initiation
@@ -34,6 +34,6 @@
 ## Note
 Each location page (`/coorg`, `/hyderabad`) includes:
 - Location overview and features
-- Upcoming events specific to that location
+- Upcoming experiences specific to that location
 - Image galleries
 - Testimonials

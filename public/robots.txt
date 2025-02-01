@@ -6,7 +6,7 @@ Disallow: /api/
 Disallow: /payments/confirmation
 
 # Allow crawling of main content
-Allow: /events/
+Allow: /experiences/
 Allow: /locations/
 Allow: /
 

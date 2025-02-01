@@ -4,30 +4,13 @@ export interface Database {
             registrations: {
                 Row: {
                     id: string;
-                    user_id: string | null;
-                    event_id: string;
+                    user_id: string;
+                    experience_id: string;
                     total_amount: number;
-                    phonepay_transaction_id: string | null;
-                    payment_status: 'pending' | 'completed' | 'failed';
+                    transaction_id: string | null;
+                    payment_status: string;
                     payment_date: string | null;
-                    booking_details: {
-                        pricing: Array<{
-                            pricing_id: string;
-                            quantity: number;
-                            amount: number;
-                        }>;
-                        food: Array<{
-                            food_option_id: string;
-                            quantity: number;
-                            amount: number;
-                        }>;
-                        dietary_restrictions?: string;
-                        emergency_contact: {
-                            name: string;
-                            phone: string;
-                            relation: string;
-                        };
-                    };
+                    booking_details: any;
                     created_at: string;
                     updated_at: string;
                     events: {
@@ -38,59 +21,25 @@ export interface Database {
                 };
                 Insert: {
                     id?: string;
-                    user_id?: string | null;
-                    event_id: string;
+                    user_id: string;
+                    experience_id: string;
                     total_amount: number;
-                    phonepay_transaction_id?: string | null;
-                    payment_status?: 'pending' | 'completed' | 'failed';
+                    transaction_id?: string | null;
+                    payment_status?: string;
                     payment_date?: string | null;
-                    booking_details: {
-                        pricing: Array<{
-                            pricing_id: string;
-                            quantity: number;
-                            amount: number;
-                        }>;
-                        food: Array<{
-                            food_option_id: string;
-                            quantity: number;
-                            amount: number;
-                        }>;
-                        dietary_restrictions?: string;
-                        emergency_contact: {
-                            name: string;
-                            phone: string;
-                            relation: string;
-                        };
-                    };
+                    booking_details?: any;
                     created_at?: string;
                     updated_at?: string;
                 };
                 Update: {
                     id?: string;
-                    user_id?: string | null;
-                    event_id?: string;
+                    user_id?: string;
+                    experience_id?: string;
                     total_amount?: number;
-                    phonepay_transaction_id?: string | null;
-                    payment_status?: 'pending' | 'completed' | 'failed';
+                    transaction_id?: string | null;
+                    payment_status?: string;
                     payment_date?: string | null;
-                    booking_details?: {
-                        pricing: Array<{
-                            pricing_id: string;
-                            quantity: number;
-                            amount: number;
-                        }>;
-                        food: Array<{
-                            food_option_id: string;
-                            quantity: number;
-                            amount: number;
-                        }>;
-                        dietary_restrictions?: string;
-                        emergency_contact: {
-                            name: string;
-                            phone: string;
-                            relation: string;
-                        };
-                    };
+                    booking_details?: any;
                     created_at?: string;
                     updated_at?: string;
                 };

@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Beforest Events",
+  title: "Beforest Experiences",
   description: "Experience nature's finest moments with our community",
 };
 

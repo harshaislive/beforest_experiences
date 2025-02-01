@@ -25,6 +25,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'isdbyvwocudnlwzghphw.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.postimg.cc',
+        pathname: '/**',
+      },
     ],
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: true,

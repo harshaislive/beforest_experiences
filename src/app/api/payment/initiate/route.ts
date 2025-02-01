@@ -2,30 +2,27 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import PhonepeGateway from '@/lib/payment/phonepepg';
 
-// Validate all required environment variables
-const requiredEnvVars = {
-    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY,
-    PHONEPAY_MERCHANT_ID: process.env.PHONEPAY_MERCHANT_ID,
-    PHONEPAY_SALT_KEY: process.env.PHONEPAY_SALT_KEY,
-    PHONEPE_SALT_INDEX: process.env.PHONEPE_SALT_INDEX || '1',
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL
-} as const;
-
-// Check for missing environment variables
-const missingEnvVars = Object.entries(requiredEnvVars)
-    .filter(([_, value]) => !value)
-    .map(([key]) => key);
-
-if (missingEnvVars.length > 0) {
-    console.error('Missing required environment variables:', missingEnvVars.join(', '));
-    throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
+// Validate required environment variables
+if (!process.env.PHONEPE_MERCHANT_ID || !process.env.PHONEPE_SALT_KEY) {
+    throw new Error('Missing required PhonePe environment variables. Please check your .env file.');
 }
+
+// Debug log environment variables (with more detail)
+console.log('PhonePe Environment Variables:', {
+    merchantId: process.env.PHONEPE_MERCHANT_ID,
+    merchantIdLength: process.env.PHONEPE_MERCHANT_ID?.length,
+    saltKey: process.env.PHONEPE_SALT_KEY?.substring(0, 4) + '...',  // Show just first 4 chars
+    saltKeyLength: process.env.PHONEPE_SALT_KEY?.length,
+    saltIndex: process.env.PHONEPE_SALT_INDEX || '1',
+    isDev: process.env.NODE_ENV === 'development',
+    appUrl: process.env.NEXT_PUBLIC_APP_URL,
+    envKeys: Object.keys(process.env).filter(key => key.includes('PHONE'))
+});
 
 // Create a Supabase client with the service role key
 const supabase = createClient(
-    requiredEnvVars.NEXT_PUBLIC_SUPABASE_URL!,
-    requiredEnvVars.SUPABASE_SERVICE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_KEY!,
     {
         auth: {
             autoRefreshToken: false,
@@ -36,85 +33,62 @@ const supabase = createClient(
 
 // Initialize PhonePe gateway
 const gateway = new PhonepeGateway({
-    merchantId: requiredEnvVars.PHONEPAY_MERCHANT_ID!,
-    saltKey: requiredEnvVars.PHONEPAY_SALT_KEY!,
-    saltIndex: parseInt(requiredEnvVars.PHONEPE_SALT_INDEX, 10),
-    isDev: process.env.NODE_ENV === 'development'
+    merchantId: 'PGTESTPAYUAT',
+    saltKey: process.env.PHONEPE_SALT_KEY!,
+    saltIndex: parseInt(process.env.PHONEPE_SALT_INDEX || '1', 10),
+    isDev: true  // Force sandbox mode
+});
+
+// Add debug logging for gateway configuration
+console.log('PhonePe Gateway Configuration:', {
+    isDev: true,  // Always sandbox
+    environment: 'sandbox',
+    merchantId: 'PGTESTPAYUAT',
+    hasSaltKey: true,
+    saltIndex: parseInt(process.env.PHONEPE_SALT_INDEX || '1', 10)
 });
 
 export async function POST(request: Request) {
     try {
         const { registrationId, amount, customerName, customerEmail, customerPhone } = await request.json();
 
-        console.log('Payment initiation request:', {
-            registrationId,
-            amount,
-            customerName,
-            customerEmail: customerEmail.replace(/(?<=.{3}).(?=.*@)/g, '*'), // Mask email for logging
-            customerPhone: customerPhone.replace(/\d(?=\d{4})/g, '*') // Mask phone for logging
-        });
-
-        // Validate required fields
-        if (!registrationId || !amount || !customerName || !customerEmail || !customerPhone) {
-            return NextResponse.json(
-                { error: 'Missing required fields', details: 'All customer details and amount are required' },
-                { status: 400 }
-            );
-        }
-
-        // Validate amount
-        if (amount <= 0 || !Number.isFinite(amount)) {
-            return NextResponse.json(
-                { error: 'Invalid amount', details: 'Amount must be a positive number' },
-                { status: 400 }
-            );
-        }
-
         // Get registration details
         const { data: registration, error: registrationError } = await supabase
             .from('registrations')
-            .select(`
-                *,
-                events (
-                    title,
-                    slug
-                ),
-                users (
-                    id,
-                    email
-                )
-            `)
+            .select('*')
             .eq('id', registrationId)
             .single();
 
-        if (registrationError) {
-            console.error('Error fetching registration:', registrationError);
-            return NextResponse.json(
-                { error: 'Failed to fetch registration details', details: registrationError.message },
-                { status: 500 }
-            );
-        }
-
-        if (!registration) {
+        if (registrationError || !registration) {
             return NextResponse.json(
                 { error: 'Registration not found' },
                 { status: 404 }
             );
         }
 
-        // Verify amount matches registration
-        if (registration.total_amount !== amount) {
-            console.error('Amount mismatch:', { expected: registration.total_amount, received: amount });
-            return NextResponse.json(
-                { error: 'Amount mismatch', details: 'Payment amount does not match registration amount' },
-                { status: 400 }
-            );
-        }
-
-        // Create a unique transaction ID with timestamp and random string for uniqueness
+        // Create a unique transaction ID
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 8);
         const merchantTransactionId = `TR${timestamp}_${random}_${registrationId}`;
+
+        // Update registration with transaction ID
+        const { error: updateError } = await supabase
+            .from('registrations')
+            .update({
+                payment_status: 'pending',
+                transaction_id: merchantTransactionId,
+                total_amount: amount,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', registrationId);
+
+        if (updateError) {
+            console.error('Error updating registration:', updateError);
+            return NextResponse.json(
+                { error: 'Failed to update registration' },
+                { status: 500 }
+            );
+        }
 
         // Create payment transaction record
         const { error: transactionError } = await supabase
@@ -129,93 +103,134 @@ export async function POST(request: Request) {
             });
 
         if (transactionError) {
-            console.error('Error creating transaction record:', transactionError);
+            console.error('Error creating payment transaction:', transactionError);
             return NextResponse.json(
-                { error: 'Failed to create transaction record', details: transactionError.message },
+                { error: 'Failed to create payment transaction' },
                 { status: 500 }
             );
         }
 
-        // Prepare PhonePe payment request
-        const callbackUrl = `${requiredEnvVars.NEXT_PUBLIC_APP_URL}/api/webhooks/payments/${registrationId}`;
-        const redirectUrl = `${requiredEnvVars.NEXT_PUBLIC_APP_URL}/payment/success?id=${registrationId}`;
-
-        // Format amount in paisa (multiply by 100)
-        const amountInPaisa = Math.round(amount * 100);
-
-        const paymentRequest = {
-            merchantId: requiredEnvVars.PHONEPAY_MERCHANT_ID!,
-            merchantTransactionId: merchantTransactionId,
+        // Initialize payment
+        console.log('Initiating payment with request:', {
+            amount: amount * 100,
+            merchantTransactionId,
             merchantUserId: registration.user_id,
-            amount: amountInPaisa,
-            redirectUrl: redirectUrl,
-            redirectMode: "POST",
-            callbackUrl: callbackUrl,
-            paymentInstrument: {
-                type: "PAY_PAGE"
-            },
-            mobileNumber: customerPhone.replace(/[^0-9]/g, ''),
-            deviceContext: {
-                deviceOS: "WEB"
-            }
-        };
-
-        console.log('Initiating PhonePe payment with request:', {
-            ...paymentRequest,
-            merchantId: requiredEnvVars.PHONEPAY_MERCHANT_ID,
-            isDev: process.env.NODE_ENV === 'development'
+            redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?id=${registrationId}`,
+            callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/payments/${registrationId}`,
+            mobileNumber: customerPhone
         });
 
-        // Initialize PhonePe payment
-        const paymentResponse = await gateway.initPayment(paymentRequest);
+        const paymentResponse = await gateway.initPayment({
+            amount: amount * 100, // Convert to paisa
+            merchantTransactionId,
+            merchantUserId: registration.user_id,
+            redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?id=${registrationId}`,
+            callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/payments/${registrationId}`,
+            mobileNumber: customerPhone
+        });
+
+        // Store the initial payment response
+        await supabase
+            .from('payment_transactions')
+            .update({
+                payment_response: paymentResponse,
+                updated_at: new Date().toISOString()
+            })
+            .eq('transaction_id', merchantTransactionId);
 
         console.log('PhonePe payment response:', {
             success: paymentResponse.success,
-            data: paymentResponse.data,
-            error: paymentResponse.error,
-            message: paymentResponse.message
+            code: paymentResponse.code,
+            message: paymentResponse.message,
+            data: paymentResponse.data
         });
 
         if (!paymentResponse.success) {
-            // Log the error but don't expose internal details to client
-            console.error('Payment initiation failed:', {
-                error: paymentResponse.error,
-                message: paymentResponse.message,
-                code: paymentResponse.code
-            });
+            // Update registration and transaction status to failed
+            await Promise.all([
+                supabase
+                    .from('registrations')
+                    .update({
+                        payment_status: 'failed',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', registrationId),
+                supabase
+                    .from('payment_transactions')
+                    .update({
+                        status: 'failed',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('transaction_id', merchantTransactionId)
+            ]);
+
+            // If it's a rate limit error, add a delay and retry once
+            if (paymentResponse.code === 'TOO_MANY_REQUESTS') {
+                console.log('Rate limited, waiting 5 seconds before retry...');
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                
+                const retryTransactionId = `RETRY_${merchantTransactionId}`;
+                
+                console.log('Retrying payment initiation...');
+                const retryResponse = await gateway.initPayment({
+                    amount: amount * 100,
+                    merchantTransactionId: retryTransactionId,
+                    merchantUserId: registration.user_id,
+                    redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?id=${registrationId}`,
+                    callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/payments/${registrationId}`,
+                    mobileNumber: customerPhone
+                });
+                
+                if (retryResponse.success) {
+                    // Update registration and create new transaction record for retry
+                    await Promise.all([
+                        supabase
+                            .from('registrations')
+                            .update({
+                                payment_status: 'pending',
+                                transaction_id: retryTransactionId,
+                                updated_at: new Date().toISOString()
+                            })
+                            .eq('id', registrationId),
+                        supabase
+                            .from('payment_transactions')
+                            .insert({
+                                registration_id: registrationId,
+                                transaction_id: retryTransactionId,
+                                amount: amount,
+                                status: 'pending',
+                                payment_response: retryResponse,
+                                created_at: new Date().toISOString(),
+                                updated_at: new Date().toISOString()
+                            })
+                    ]);
+
+                    return NextResponse.json({
+                        success: true,
+                        registration,
+                        redirectUrl: retryResponse.data.data.instrumentResponse.redirectInfo.url,
+                        transactionId: retryTransactionId
+                    });
+                }
+            }
+            
             return NextResponse.json(
-                { 
-                    error: 'Payment initiation failed', 
-                    details: process.env.NODE_ENV === 'development' 
-                        ? paymentResponse.message || 'Unable to initialize payment gateway'
-                        : 'Unable to initialize payment gateway'
-                },
+                { error: 'Payment initiation failed', details: paymentResponse.message },
                 { status: 400 }
             );
         }
 
         return NextResponse.json({
             success: true,
-            redirectUrl: paymentResponse.data.redirectUrl,
-            paymentUrl: paymentResponse.data.redirectUrl,
-            registration: {
-                id: registrationId,
-                total_amount: amount,
-                event: registration.events,
-                booking_details: registration.booking_details
-            }
+            registration,
+            redirectUrl: paymentResponse.data.data.instrumentResponse.redirectInfo.url,
+            transactionId: merchantTransactionId
         });
 
     } catch (error) {
         console.error('Payment initiation error:', error);
-        // Don't expose internal error details in production
         return NextResponse.json(
-            { 
-                error: 'Failed to initiate payment',
-                details: process.env.NODE_ENV === 'development' 
-                    ? (error instanceof Error ? error.message : 'Unknown error')
-                    : 'An unexpected error occurred'
-            },
+            { error: 'Failed to initiate payment' },
             { status: 500 }
         );
     }

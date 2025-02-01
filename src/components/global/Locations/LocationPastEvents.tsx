@@ -2,15 +2,15 @@
 
 import React from 'react';
 import { Event } from '@/lib/types';
-import EventCard from '@/components/global/Events/EventCard';
+import ExperienceCard from '@/components/global/Experiences/ExperienceCard';
 import { motion } from 'framer-motion';
 
-interface LocationPastEventsProps {
+interface LocationPastExperiencesProps {
   name: string;
   events: Event[];
 }
 
-export default function LocationPastEvents({ name, events }: LocationPastEventsProps) {
+export default function LocationPastExperiences({ name, events }: LocationPastExperiencesProps) {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -56,13 +56,13 @@ export default function LocationPastEvents({ name, events }: LocationPastEventsP
             className="text-4xl sm:text-5xl font-bold text-deep-brown mb-8"
             variants={itemVariants}
           >
-            Past Events at {name}
+            Past Experiences at {name}
           </motion.h2>
           <motion.p 
             className="text-xl text-deep-brown/80 leading-relaxed"
             variants={itemVariants}
           >
-            Explore the memorable experiences we&apos;ve hosted at this location. Each event has contributed to our growing community and connection with nature.
+            Relive the magic of our past experiences and get inspired for future adventures
           </motion.p>
         </motion.div>
 
@@ -79,10 +79,8 @@ export default function LocationPastEvents({ name, events }: LocationPastEventsP
               variants={itemVariants}
               className="transform transition-all duration-300 hover:-translate-y-1"
             >
-              <EventCard
-                event={event}
-                showDescription={true}
-                showCapacity={false}
+              <ExperienceCard
+                experience={event}
               />
             </motion.div>
           ))}

@@ -1,20 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import MainLayout from '@/components/layout/MainLayout';
-
-// Move Supabase client to server-side only
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!,
-    {
-        auth: {
-            persistSession: false
-        }
-    }
-);
+import { 
+    PAYMENT_STATUS, 
+    PAYMENT_MESSAGES, 
+    PAYMENT_TITLES, 
+    PAYMENT_EMOJIS, 
+    PAYMENT_NEXT_STEPS,
+    PaymentStatusType 
+} from '@/lib/constants/payment';
+import { createServerSupabaseClient } from '@/lib/supabase';
+import PaymentStatusClient from './PaymentStatusClient';
 
 interface PaymentResultPageProps {
     params: {
@@ -22,6 +20,7 @@ interface PaymentResultPageProps {
     };
     searchParams: {
         id?: string;
+        type?: string;
     };
 }
 
@@ -42,30 +41,40 @@ interface FoodOption {
     is_vegetarian: boolean | null;
 }
 
-interface Event {
+interface Experience {
     id: string;
     title: string;
     start_date: string;
     end_date: string;
-    event_pricing: PricingOption[];
-    event_food_options: FoodOption[];
+    experience_pricing: PricingOption[];
+    experience_food_options: FoodOption[];
+}
+
+interface PricingItem {
+    pricing_id: string;
+    quantity: number;
+    amount: number;
+}
+
+interface FoodItem {
+    food_option_id: string;
+    quantity: number;
+    amount: number;
 }
 
 interface BookingDetails {
-    pricing: Array<{
-        pricing_id: string;
-        quantity: number;
-        amount: number;
-    }>;
+    pricing: PricingItem[];
     personal_info: {
         email: string;
         full_name: string;
     };
-    food?: Array<{
-        food_option_id: string;
-        quantity: number;
-        amount: number;
-    }>;
+    food?: FoodItem[];
+    emergency_contact?: {
+        name: string;
+        phone: string;
+        relation: string;
+    };
+    dietary_restrictions?: string;
 }
 
 interface PaymentTransaction {
@@ -76,16 +85,16 @@ interface PaymentTransaction {
 
 interface Registration {
     id: string;
-    user_id: string | null;
-    event_id: string | null;
+    user_id: string;
+    experience_id: string;
     total_amount: number;
-    phonepay_transaction_id: string | null;
-    payment_status: 'pending' | 'completed' | 'failed' | null;
+    transaction_id: string | null;
+    payment_status: string;
     payment_date: string | null;
     booking_details: BookingDetails;
-    created_at: string | null;
-    updated_at: string | null;
-    events: Event;
+    created_at: string;
+    updated_at: string;
+    experiences: Experience;
     payment_transactions?: PaymentTransaction[];
 }
 
@@ -102,429 +111,450 @@ interface Template {
     };
 }
 
-// Fix the ticket details template
-const createTemplateContent = (registration: Registration) => {
-    // Early return if no registration details
-    if (!registration?.booking_details?.pricing || registration.booking_details.pricing.length === 0) {
-        return `
-Dear ${registration.booking_details?.personal_info?.full_name || 'Guest'},
+interface TemplateData {
+    name: string;
+    email: string;
+    experience_title: string;
+    experience_date: string;
+    amount: string;
+    transaction_id: string;
+    tickets: string;
+    food_items: string;
+}
 
-Thank you for booking **${registration.events?.title || 'the event'}**. However, there seems to be an issue with the ticket details. Please contact support for assistance.`;
-    }
-
-    return `
-Dear ${registration.booking_details?.personal_info?.full_name || 'Guest'},
-
-Thank you for booking **${registration.events?.title || 'the event'}**. Here are your booking details:
-
-## Event Details
-• Event: ${registration.events?.title || ''}
-• Date: ${registration.events?.start_date ? new Date(registration.events.start_date).toLocaleDateString('en-IN', {
+const formatCurrency = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
+const formatDateTime = (date: string) => new Date(date).toLocaleDateString('en-IN', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
     timeZone: 'Asia/Kolkata'
-}) : ''}
-• Transaction ID: ${registration.phonepay_transaction_id || registration.id}
-• Total Amount: ₹${registration.total_amount.toLocaleString('en-IN')}
+});
 
-## Ticket Details
-${registration.booking_details.pricing.map((item) => {
-    const option = registration.events?.event_pricing?.find(p => p.id === item.pricing_id);
-    return `• ${item.quantity}x ${option?.category || 'Ticket'} - ₹${item.amount.toLocaleString('en-IN')}`;
-}).join('\n')}
-
-${registration.booking_details?.food?.length ? `
-## Food Items
-${registration.booking_details.food.map((item) => {
-    const option = registration.events?.event_food_options?.find(f => f.id === item.food_option_id);
-    return `• ${item.quantity}x ${option?.name || 'Food Item'} - ₹${item.amount.toLocaleString('en-IN')}`;
-}).join('\n')}
-` : ''}
-
-## Next Steps
-1. Save your booking ID for future reference
-2. Arrive at the venue 15 minutes before the event starts
-
-If you have any questions, please don't hesitate to contact us.`;
+const getStatusEmoji = (status: string) => {
+    return PAYMENT_EMOJIS[status as PaymentStatusType] || '❓';
 };
 
-async function getRegistrationDetails(registrationId: string): Promise<Registration | null> {
+const getStatusText = (status: string) => {
+    return PAYMENT_TITLES[status as PaymentStatusType]?.replace('Payment ', '').replace('Booking ', '') || 'Unknown';
+};
+
+const getStatusMessage = (status: string) => {
+    return `**${PAYMENT_MESSAGES[status as PaymentStatusType]}**` || '**Please contact support for assistance.**';
+};
+
+const getNextSteps = (status: string) => {
+    return PAYMENT_NEXT_STEPS[status as PaymentStatusType]?.join('\n') || 'Please contact our support team for assistance.';
+};
+
+const formatName = (name?: string) => name ? name.split(' ').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+).join(' ') : 'Guest';
+
+const formatPhone = (phone?: string) => {
+    if (!phone) return '';
+    return phone.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
+};
+
+const formatRelation = (relation?: string) => relation ? 
+    relation.charAt(0).toUpperCase() + relation.slice(1).toLowerCase() : '';
+
+const createTemplateContent = (registration: Registration, status: string) => {
+    const {
+        booking_details,
+        experiences,
+        transaction_id,
+        id,
+        total_amount,
+        created_at
+    } = registration;
+
+    const {
+        personal_info,
+        pricing,
+        food,
+        emergency_contact,
+        dietary_restrictions
+    } = booking_details;
+
+    console.log('Creating template with personal info:', personal_info);
+    const userName = formatName(personal_info?.full_name);
+    console.log('Formatted name:', userName);
+
+    // Early return if no registration details
+    if (!pricing || pricing.length === 0) {
+        return `
+Dear ${userName},
+
+Thank you for booking **${experiences?.title || 'the experience'}**. However, there seems to be an issue with the ticket details. Please contact support for assistance.`;
+    }
+
+    const bookingDate = new Date(created_at).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
+    const ticketDetails = pricing.map((item: PricingItem) => {
+        const option = experiences?.experience_pricing?.find(p => p.id === item.pricing_id);
+        return `• ${item.quantity}x ${option?.category || 'Ticket'} - ${formatCurrency(item.amount)}`;
+    }).join('\n');
+
+    const foodDetails = food?.length ? `
+## Food & Beverages
+${food.map((item: FoodItem) => {
+    const option = experiences?.experience_food_options?.find(f => f.id === item.food_option_id);
+    return `• ${item.quantity}x ${option?.name || 'Food Item'} - ${formatCurrency(item.amount)}`;
+}).join('\n')}` : '';
+
+    const emergencyContactDetails = emergency_contact ? `
+## Emergency Contact Information
+• Name: ${formatName(emergency_contact.name)}
+• Phone: ${formatPhone(emergency_contact.phone)}
+• Relation: ${formatRelation(emergency_contact.relation)}` : '';
+
+    const dietaryRestrictionsDetails = dietary_restrictions ? `
+## Special Requirements
+• Dietary Restrictions: ${dietary_restrictions}` : '';
+
+    return `
+Dear ${userName},
+
+Thank you for booking **${experiences?.title || 'the experience'}**.
+
+${getStatusMessage(status)}
+
+## Booking Information
+• Booking Date: ${bookingDate}
+• Booking ID: ${id}
+• Transaction ID: ${transaction_id || id}
+• Payment Status: ${getStatusEmoji(status)} ${getStatusText(status)}
+
+## Experience Details
+• Experience: ${experiences?.title || ''}
+• Date: ${experiences?.start_date ? formatDateTime(experiences.start_date) : ''}
+• Duration: ${experiences?.end_date ? calculateDuration(experiences.start_date, experiences.end_date) : ''}
+• Venue: Hyderabad
+
+## Order Summary
+• Total Amount: ${formatCurrency(total_amount)}
+
+## Ticket Details
+${ticketDetails}
+${foodDetails}
+${emergencyContactDetails}
+${dietaryRestrictionsDetails}
+
+## Next Steps
+${getNextSteps(status)}
+
+If you have any questions, please don't hesitate to contact us.
+
+---
+*This is an automatically generated confirmation. You can download a PDF copy of this receipt for your records.*`;
+};
+
+const calculateDuration = (start: string, end: string) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const hours = Math.abs(endDate.getTime() - startDate.getTime()) / 36e5;
+    return `${Math.floor(hours)} hours ${hours % 1 * 60 >= 1 ? Math.round(hours % 1 * 60) + ' minutes' : ''}`;
+};
+
+const ErrorComponent = () => (
+    <MainLayout>
+        <div className="min-h-[80vh] bg-gray-50">
+            <div className="container mx-auto px-4 py-12">
+                <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <div className="bg-red-600 px-6 py-4">
+                        <h1 className="text-2xl font-semibold text-white">
+                            Error Loading Payment Status
+                        </h1>
+                    </div>
+                    <div className="p-6">
+                        <div className="text-center">
+                            <div className="mb-6">
+                                <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <p className="text-gray-600 mb-8">
+                                We encountered an error while loading your payment status. Please try again later or contact support if the issue persists.
+                            </p>
+                            <div className="flex justify-center space-x-4">
+                                <Link 
+                                    href="/experiences"
+                                    className="inline-flex items-center px-6 py-3 bg-terracotta text-white text-sm font-medium rounded-lg hover:bg-terracotta/90 transition-colors"
+                                >
+                                    Browse Experiences
+                                </Link>
+                                <button
+                                    onClick={() => window.history.back()}
+                                    className="inline-flex items-center px-6 py-3 border border-terracotta text-terracotta text-sm font-medium rounded-lg hover:bg-terracotta/10 transition-colors"
+                                >
+                                    Go Back
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </MainLayout>
+);
+
+async function getRegistrationDetails(id: string, type: string = 'registration'): Promise<Registration | null> {
+    if (!id) {
+        console.error('No ID provided to getRegistrationDetails');
+        return null;
+    }
+
     try {
-    const { data, error } = await supabase
-        .from('registrations')
-        .select(`
-            id,
-            user_id,
-            event_id,
-            total_amount,
-            phonepay_transaction_id,
-            payment_status,
-            payment_date,
-            booking_details,
-            created_at,
-            updated_at,
-            events (
-                id,
-                title,
-                start_date,
-                end_date,
-                event_pricing (
-                    id,
-                    category,
-                    price,
-                    description,
-                    max_quantity
-                ),
-                event_food_options (
-                    id,
-                    name,
-                    description,
-                    price,
-                    max_quantity,
-                    is_vegetarian
-                )
-            ),
-            payment_transactions (
-                transaction_id,
-                status,
-                payment_response
-            )
-        `)
-        .eq('id', registrationId)
-        .single();
+        console.log('Fetching registration details:', { id, type });
+        const supabase = createServerSupabaseClient();
+        let registrationId = id;
 
-    if (error) {
-        console.error('Error fetching registration:', error);
-        return null;
-    }
+        if (type === 'transaction') {
+            // First, get the registration_id from payment_transactions
+            const { data: transaction, error: transactionError } = await supabase
+                .from('payment_transactions')
+                .select('registration_id')
+                .eq('transaction_id', id)
+                .maybeSingle();
 
-    if (!data) {
-        return null;
-    }
+            if (transactionError) {
+                console.error('Error fetching transaction:', transactionError);
+                return null;
+            }
 
-    // Transform the data to match our types
-    const eventData = Array.isArray(data.events) ? data.events[0] : data.events;
-    
-    const registration: Registration = {
-        ...data,
-        events: {
-            ...eventData,
-            event_pricing: eventData.event_pricing || [],
-            event_food_options: eventData.event_food_options || []
+            if (!transaction?.registration_id) {
+                console.error('No registration found for transaction:', id);
+                return null;
+            }
+
+            console.log('Found registration ID:', transaction.registration_id);
+            registrationId = transaction.registration_id;
         }
-    };
 
-    console.log('Fetched registration with details:', registration);
-    return registration;
+        // Then get the registration details using the registration_id
+        const { data, error } = await supabase
+            .from('registrations')
+            .select(`
+                id,
+                user_id,
+                experience_id,
+                total_amount,
+                transaction_id,
+                payment_status,
+                payment_date,
+                booking_details,
+                created_at,
+                updated_at,
+                experiences:experience_id (
+                    id,
+                    title,
+                    start_date,
+                    end_date,
+                    experience_pricing (
+                        id,
+                        price,
+                        category,
+                        description,
+                        max_quantity
+                    ),
+                    experience_food_options (
+                        id,
+                        name,
+                        description,
+                        price,
+                        max_quantity,
+                        is_vegetarian
+                    )
+                ),
+                payment_transactions (
+                    transaction_id,
+                    status,
+                    payment_response
+                )
+            `)
+            .eq('id', registrationId)
+            .maybeSingle();
+
+        if (error) {
+            console.error('Error fetching registration:', error);
+            return null;
+        }
+
+        if (!data) {
+            console.error('No registration found with ID:', registrationId);
+            return null;
+        }
+
+        // Transform the data to match our types
+        const experienceData = Array.isArray(data.experiences) 
+            ? data.experiences[0] 
+            : data.experiences;
+        
+        if (!experienceData) {
+            console.error('No experience data found for registration:', registrationId);
+            return null;
+        }
+
+        // Parse booking_details if it's a string
+        let parsedBookingDetails: BookingDetails;
+        try {
+            parsedBookingDetails = typeof data.booking_details === 'string'
+                ? JSON.parse(data.booking_details)
+                : data.booking_details;
+                
+            console.log('Parsed booking details:', {
+                hasPersonalInfo: !!parsedBookingDetails?.personal_info,
+                personalInfo: parsedBookingDetails?.personal_info
+            });
+
+            // Fallback: If personal_info is missing, fetch from users table
+            if ((!parsedBookingDetails.personal_info || !parsedBookingDetails.personal_info.full_name) && data.user_id) {
+                const { data: userData, error: userError } = await supabase
+                    .from('users')
+                    .select('full_name, email, phone')
+                    .eq('id', data.user_id)
+                    .maybeSingle();
+
+                if (userError) {
+                    console.error('Error fetching user details:', userError);
+                } else if (userData) {
+                    parsedBookingDetails.personal_info = {
+                        full_name: userData.full_name,
+                        email: userData.email
+                    };
+                    console.log('Falling back to user data:', parsedBookingDetails.personal_info);
+                }
+            }
+        } catch (e) {
+            console.error('Error parsing booking_details:', e);
+            return null;
+        }
+
+        const registration: Registration = {
+            ...data,
+            booking_details: parsedBookingDetails,
+            experiences: {
+                ...experienceData,
+                experience_pricing: experienceData.experience_pricing || [],
+                experience_food_options: experienceData.experience_food_options || []
+            }
+        };
+
+        console.log('Successfully fetched registration:', {
+            id: registration.id,
+            status: registration.payment_status,
+            experienceTitle: registration.experiences.title,
+            transactions: registration.payment_transactions?.length || 0,
+            userName: registration.booking_details?.personal_info?.full_name
+        });
+
+        return registration;
     } catch (error) {
-        console.error('Unexpected error fetching registration:', error);
+        console.error('Unexpected error in getRegistrationDetails:', error);
         return null;
     }
 }
 
 async function getConfirmationTemplate(type: string, registration: Registration): Promise<Template | null> {
     try {
-    console.log('Fetching template for type:', type);
-    
-    // Create a clean template structure
-    const createTemplate = (content: string) => ({
-        type,
-        title: 'Booking Confirmation',
-        content: {
-            sections: [{
-                type: 'details',
-                content: content
-            }]
-        }
-    });
+        console.log('Fetching template for type:', type);
+        
+        // Create a clean template structure
+        const createTemplate = (content: string): Template => ({
+            type,
+            title: type === 'pending' ? 'Payment Processing' : 
+                  type === 'success' ? 'Booking Confirmation' : 'Payment Failed',
+            content: {
+                sections: [{
+                    type: 'details',
+                    content: content
+                }]
+            }
+        });
 
-        const templateContent = createTemplateContent(registration);
-
-    // Try to get template from database
-    const { data: dbTemplate, error } = await supabase
-        .from('confirmation_templates')
-        .select('*')
-        .eq('type', type)
-        .eq('is_active', true)
-        .single();
-
-    if (error || !dbTemplate) {
-        console.log('Using fallback template');
+        const templateContent = createTemplateContent(registration, type);
         return createTemplate(templateContent);
-    }
-
-    // Process database template
-    const templateData = {
-        name: registration.booking_details?.personal_info?.full_name || '',
-        email: registration.booking_details?.personal_info?.email || '',
-        event_title: registration.events?.title || '',
-        event_date: registration.events?.start_date ? new Date(registration.events.start_date).toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'Asia/Kolkata'
-        }) : '',
-        amount: `₹${registration.total_amount.toLocaleString('en-IN')}`,
-        transaction_id: registration.phonepay_transaction_id || registration.id,
-        tickets: registration.booking_details?.pricing?.map((item) => {
-            const option = registration.events?.event_pricing?.find(p => p.id === item.pricing_id);
-                return `• ${item.quantity}x ${option?.category || 'Ticket'} - ₹${item.amount.toLocaleString('en-IN')}`;
-        }).join('\n') || '',
-        food_items: registration.booking_details?.food?.map((item) => {
-            const option = registration.events?.event_food_options?.find(f => f.id === item.food_option_id);
-                return `• ${item.quantity}x ${option?.name || 'Food Item'} - ₹${item.amount.toLocaleString('en-IN')}`;
-        }).join('\n') || ''
-    };
-
-    // Replace variables in the database template
-    const processedContent = Object.entries(templateData).reduce(
-        (content, [key, value]) => content.replace(new RegExp(`{{${key}}}`, 'g'), String(value)),
-        dbTemplate.content
-    );
-
-    return createTemplate(processedContent);
     } catch (error) {
         console.error('Error creating confirmation template:', error);
         return null;
     }
 }
 
-export default async function PaymentStatusPage({ params, searchParams }: PaymentResultPageProps) {
-    const { status } = params;
-    const { id: registrationId } = searchParams;
-    const normalizedStatus = status.toLowerCase();
+export default async function PaymentResultPage({ params, searchParams }: PaymentResultPageProps) {
+    try {
+        const { status } = params;
+        const { id, type } = searchParams;
 
-    if (!registrationId) {
-        notFound();
-    }
-
-    // Get registration details
-    const registration = await getRegistrationDetails(registrationId);
-
-    if (!registration) {
-        notFound();
-    }
-
-    // Get confirmation template
-    const template = await getConfirmationTemplate('booking', registration);
-
-    if (!template) {
-        notFound();
-    }
-
-    const statusConfig = {
-        success: {
-            bgColor: 'bg-green-50',
-            iconBg: 'bg-green-100',
-            iconColor: 'text-green-600',
-            borderColor: 'border-green-200',
-            title: 'Payment Successful',
-            description: 'Your booking has been confirmed'
-        },
-        failed: {
-            bgColor: 'bg-red-50',
-            iconBg: 'bg-red-100',
-            iconColor: 'text-red-600',
-            borderColor: 'border-red-200',
-            title: 'Payment Failed',
-            description: 'There was an issue with your payment'
+        if (!id) {
+            console.error('No ID provided in search params');
+            return <ErrorComponent />;
         }
-    };
 
-    const config = statusConfig[normalizedStatus as keyof typeof statusConfig] || statusConfig.failed;
+        if (!Object.values(PAYMENT_STATUS).includes(status as PaymentStatusType)) {
+            console.error('Invalid payment status:', status);
+            return <ErrorComponent />;
+        }
 
-    return (
-        <MainLayout>
-            <div className="container mx-auto px-4 py-8 md:py-12">
-                <div className="max-w-2xl mx-auto">
-                    <div className="mb-6">
-                        <Link 
-                            href="/"
-                            className="inline-flex items-center text-terracotta hover:text-terracotta/80 transition-colors font-medium"
-                        >
-                            <svg 
-                                className="w-5 h-5 mr-2" 
-                                fill="none" 
-                                stroke="currentColor" 
-                                viewBox="0 0 24 24"
-                            >
-                                <path 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    strokeWidth={2} 
-                                    d="M10 19l-7-7m0 0l7-7m-7 7h18" 
-                                />
-                            </svg>
-                            Back to Home
-                        </Link>
-                    </div>
+        // Get registration details
+        const registration = await getRegistrationDetails(id, type);
+        if (!registration) {
+            console.error('Registration not found:', { id, type });
+            return <ErrorComponent />;
+        }
 
-                    <div className={`w-full ${config.bgColor} rounded-2xl p-6 md:p-8 shadow-xl border ${config.borderColor}`}>
-                        {/* Status Header */}
-                        <div className="flex flex-col items-center justify-center text-center mb-8">
-                            <div className={`w-20 h-20 ${config.iconBg} rounded-full flex items-center justify-center mb-4 shadow-lg`}>
-                                {normalizedStatus === 'success' ? (
-                                    <svg className={`w-10 h-10 ${config.iconColor}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                ) : (
-                                    <svg className={`w-10 h-10 ${config.iconColor}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                )}
-                            </div>
-                            <h1 className="text-3xl font-bold mb-2 text-deep-brown">
-                                {config.title}
-                            </h1>
-                            <p className="text-lg text-deep-brown/80">
-                                {config.description}
-                            </p>
-                        </div>
+        // Determine the actual payment status
+        const paymentStatus = registration.payment_transactions?.[0]?.status || registration.payment_status;
+        let actualStatus: PaymentStatusType = PAYMENT_STATUS.PENDING;
+        
+        if (paymentStatus === PAYMENT_STATUS.SUCCESS) {
+            actualStatus = PAYMENT_STATUS.SUCCESS;
+        } else if (paymentStatus === PAYMENT_STATUS.FAILED) {
+            actualStatus = PAYMENT_STATUS.FAILED;
+        }
 
-                        {/* Ticket Details Card */}
-                        <div className="bg-white rounded-xl p-6 shadow-md mb-6">
-                            <div className="space-y-6">
-                                {/* Event Details */}
-                                <div>
-                                    <h2 className="text-xl font-semibold mb-4 text-deep-brown">Event Details</h2>
-                                    <div className="grid gap-3">
-                                        <div className="flex items-start gap-2">
-                                            <span className="text-terracotta">•</span>
-                                            <div>
-                                                <span className="font-medium">Event:</span>{' '}
-                                                <span className="text-deep-brown/80">{registration.events?.title}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <span className="text-terracotta">•</span>
-                                            <div>
-                                                <span className="font-medium">Date:</span>{' '}
-                                                <span className="text-deep-brown/80">
-                                                    {registration.events?.start_date ? new Date(registration.events.start_date).toLocaleDateString('en-IN', {
-                                                        day: 'numeric',
-                                                        month: 'long',
-                                                        year: 'numeric',
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                        timeZone: 'Asia/Kolkata'
-                                                    }) : ''}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <span className="text-terracotta">•</span>
-                                            <div>
-                                                <span className="font-medium">Transaction ID:</span>{' '}
-                                                <span className="text-deep-brown/80">{registration.phonepay_transaction_id || registration.id}</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <span className="text-terracotta">•</span>
-                                            <div>
-                                                <span className="font-medium">Total Amount:</span>{' '}
-                                                <span className="text-deep-brown/80">₹{registration.total_amount.toLocaleString('en-IN')}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+        // If we're on the wrong status page, redirect
+        if (status !== actualStatus) {
+            // Construct the path first
+            const path = `/payment/${actualStatus}`;
+            
+            // Create search params
+            const searchParams = new URLSearchParams();
+            searchParams.set('id', id);
+            if (type) {
+                searchParams.set('type', type);
+            }
+            
+            // Combine path and search params
+            const redirectPath = `${path}?${searchParams.toString()}`;
+            
+            return redirect(redirectPath);
+        }
 
-                                {/* Ticket Details */}
-                                <div>
-                                    <h2 className="text-xl font-semibold mb-4 text-deep-brown">Ticket Details</h2>
-                                    <div className="grid gap-3">
-                                        {registration.booking_details?.pricing?.map((item, index) => {
-                                            const option = registration.events?.event_pricing?.find(p => p.id === item.pricing_id);
-                                            return (
-                                                <div key={index} className="flex items-start gap-2">
-                                                    <span className="text-terracotta">•</span>
-                                                    <div>
-                                                        <span className="text-deep-brown/80">
-                                                            {item.quantity}x {option?.category || 'Ticket'} - ₹{item.amount.toLocaleString('en-IN')}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+        // Get template
+        const template = await getConfirmationTemplate(actualStatus, registration);
+        if (!template) {
+            throw new Error('Failed to create payment template');
+        }
 
-                                {/* Food Items */}
-                                {registration.booking_details?.food && registration.booking_details.food.length > 0 && (
-                                    <div>
-                                        <h2 className="text-xl font-semibold mb-4 text-deep-brown">Food Items</h2>
-                                        <div className="grid gap-3">
-                                            {registration.booking_details.food.map((item, index) => {
-                                                const option = registration.events?.event_food_options?.find(f => f.id === item.food_option_id);
-                                                return (
-                                                    <div key={index} className="flex items-start gap-2">
-                                                        <span className="text-terracotta">•</span>
-                                                        <div>
-                                                            <span className="text-deep-brown/80">
-                                                                {item.quantity}x {option?.name || 'Food Item'} - ₹{item.amount.toLocaleString('en-IN')}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Next Steps */}
-                                <div>
-                                    <h2 className="text-xl font-semibold mb-4 text-deep-brown">Next Steps</h2>
-                                    <div className="grid gap-3">
-                                        <div className="flex items-start gap-2">
-                                            <span className="text-terracotta">1.</span>
-                                            <div>
-                                                <span className="text-deep-brown/80">Save your booking ID for future reference</span>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-start gap-2">
-                                            <span className="text-terracotta">2.</span>
-                                            <div>
-                                                <span className="text-deep-brown/80">Arrive at the venue 15 minutes before the event starts</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-                            {normalizedStatus === 'success' && (
-                                <a
-                                    href={`/api/tickets/${registrationId}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-deep-brown hover:bg-deep-brown/90 text-white font-medium transition-colors duration-200"
-                                >
-                                    <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    Download Ticket
-                                </a>
-                            )}
-                            <Link
-                                href="/"
-                                className={`
-                                    inline-flex items-center justify-center px-6 py-3 rounded-lg
-                                    ${normalizedStatus === 'success' ? 'bg-terracotta hover:bg-terracotta/90' : 'bg-deep-brown hover:bg-deep-brown/90'}
-                                    text-white font-medium transition-colors duration-200
-                                `}
-                            >
-                                Return to Home
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-        </div>
-        </MainLayout>
-    );
+        return (
+            <MainLayout>
+                <PaymentStatusClient 
+                    status={actualStatus}
+                    searchParams={{ id, type }}
+                    templateContent={template.content.sections[0].content}
+                />
+            </MainLayout>
+        );
+    } catch (error) {
+        console.error('Error in PaymentResultPage:', error);
+        return <ErrorComponent />;
+    }
 } 

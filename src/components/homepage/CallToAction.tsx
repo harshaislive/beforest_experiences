@@ -24,7 +24,7 @@ export default function CallToAction() {
                                 Join our community and discover a life in harmony with nature
                             </p>
                             <Link
-                                href="/events"
+                                href="/experiences"
                                 className="inline-flex items-center gap-2 bg-terracotta hover:bg-terracotta/90 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all hover:scale-105 active:scale-100 group"
                             >
                                 Explore Events

@@ -15,22 +15,22 @@ interface HeroImageProps {
 // Static hero content component
 const HeroContent: React.FC<HeroContentProps> = () => (
     <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center px-4 sm:px-6 md:px-8 w-full max-w-4xl mx-auto">
+        <div className="text-center px-4 sm:px-6 md:px-8 w-full max-w-5xl mx-auto">
             <div className="backdrop-blur-md bg-black/30 rounded-2xl p-8 sm:p-12 border border-white/10 shadow-2xl">
-                <p className="text-lg sm:text-xl font-medium mb-2 text-white">
-                    Begin Your Beforest Journey
+                <p className="text-lg sm:text-xl font-medium mb-2 text-white/90">
+                    Remember When Life Was Simple?
                 </p>
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 leading-tight text-white">
-                    Welcome to Beforest
+                    Rediscover Life&apos;s Pure Moments in the Forest
                 </h1>
-                <p className="text-lg sm:text-xl md:text-2xl mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed text-white/90">
-                    Experience nature&apos;s finest moments with our community
+                <p className="text-lg sm:text-xl md:text-2xl mb-8 sm:mb-10 max-w-3xl mx-auto leading-relaxed text-white/90">
+                    Join intimate Beforest experiences where campfires, starlit dinners, and morning birdsong bring back the joy of simple living
                 </p>
                 <Link 
-                    href="/events" 
+                    href="/experiences" 
                     className="inline-flex items-center gap-2 bg-terracotta hover:bg-terracotta/90 text-white px-8 py-4 rounded-xl text-lg font-semibold transition-all active:bg-terracotta/80 touch-manipulation group"
                 >
-                    Explore Events
+                    View Experiences
                     <svg 
                         className="w-5 h-5 transform transition-transform group-hover:translate-x-1" 
                         fill="none" 
@@ -49,7 +49,7 @@ const HeroContent: React.FC<HeroContentProps> = () => (
 const HeroImage: React.FC<HeroImageProps> = () => (
     <div className="relative w-full h-full">
         <Image 
-            src="https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=2000&q=80"
+            src="https://i.postimg.cc/MGXQtq6Z/PBR-6090.jpg"
             alt="Beforest Hero"
             fill
             sizes="(max-width: 768px) 100vw, 100vw"
@@ -57,7 +57,7 @@ const HeroImage: React.FC<HeroImageProps> = () => (
             className="object-cover"
             onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                 const target = e.currentTarget;
-                target.src = "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=2000&q=80";
+                target.src = "https://i.postimg.cc/MGXQtq6Z/PBR-6090.jpg";
             }}
         />
     </div>

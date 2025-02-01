@@ -33,10 +33,6 @@ These components are designed to be reused across different pages and features:
 - `Summary`: Shows booking summary
 - Used across the event booking flow
 
-### Confirmation Components (`/global/Confirmation`)
-- `TemplateRenderer`: Renders dynamic confirmation templates
-- Used in: success pages, emails, notifications
-
 ## Page-Specific Components
 
 These components are designed for specific pages or sections:
@@ -62,15 +58,5 @@ These components are designed for specific pages or sections:
 
 4. **Styling**:
    - Use Tailwind CSS classes
-   - Keep styles consistent across different usages of the same component
-   - Use variants prop for different visual styles
-
-5. **Data Fetching**:
-   - Components should receive data as props
-   - Data fetching logic belongs in page components or server components
-   - Use loading states and error handling
-
-6. **Layout Components**:
-   - Use MainLayout for consistent page structure
-   - Header and Footer components handle their own state
-   - Responsive design considerations built-in
+   - Follow the project's color scheme and design tokens
+   - Maintain responsive design principles

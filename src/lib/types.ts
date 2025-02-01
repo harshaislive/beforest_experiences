@@ -11,7 +11,7 @@ export interface Event {
     is_featured: boolean;
     location_id: string;
     locations?: Location;
-    event_images: Array<{
+    experience_images: Array<{
         id: string;
         image_url: string;
         is_hero: boolean;
@@ -76,7 +76,13 @@ export interface EventItinerary {
 }
 
 export interface DatabaseEvent extends Omit<Event, 'pricing_options' | 'food_options' | 'itinerary'> {
-    event_pricing: Event['pricing_options'];
-    event_food_options: Event['food_options'];
-    event_itinerary?: EventItinerary[];
+    experience_pricing: Event['pricing_options'];
+    experience_food_options: Event['food_options'];
+    experience_itinerary?: EventItinerary[];
+    experience_images: Array<{
+        id: string;
+        image_url: string;
+        is_hero: boolean;
+        alt_text: string;
+    }>;
 }

@@ -1,6 +1,6 @@
 import { getNearestUpcomingEvent } from '@/lib/supabase';
 import { Event } from '@/lib/types';
-import EventCard from '@/components/global/Events/EventCard';
+import ExperienceCard from '@/components/global/Experiences/ExperienceCard';
 
 export default async function NearestEventSection() {
     let event: Event | null = null;
@@ -75,8 +75,8 @@ export default async function NearestEventSection() {
                         </p>
                     </div>
                     <div className="max-w-5xl mx-auto">
-                        <EventCard
-                            event={event}
+                        <ExperienceCard
+                            experience={event}
                             variant="featured"
                             showDescription={true}
                             showCapacity={true}

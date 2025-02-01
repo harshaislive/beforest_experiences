@@ -1,0 +1,1 @@
+INSERT INTO "public"."newsletter_subscriptions" ("id", "email", "is_active", "source", "registration_id", "subscribed_at", "unsubscribed_at", "created_at", "updated_at") VALUES ('ec468d47-0c33-4029-abed-7786691225c2', 'mudumbaharsha@gmail.com', 'true', 'footer', null, '2025-01-30 11:53:42.11+00', null, '2025-01-30 11:53:49.984412+00', '2025-01-30 11:53:49.984412+00');

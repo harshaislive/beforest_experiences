@@ -2,16 +2,16 @@
 
 import React from 'react';
 import { Event } from '@/lib/types';
-import EventCard from '@/components/global/Events/EventCard';
+import ExperienceCard from '@/components/global/Experiences/ExperienceCard';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
-interface LocationUpcomingEventsProps {
+interface LocationUpcomingExperiencesProps {
   name: string;
   events: Event[];
 }
 
-export default function LocationUpcomingEvents({ name, events }: LocationUpcomingEventsProps) {
+export default function LocationUpcomingExperiences({ name, events }: LocationUpcomingExperiencesProps) {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -38,76 +38,47 @@ export default function LocationUpcomingEvents({ name, events }: LocationUpcomin
   }
 
   return (
-    <section id="upcoming-events" className="py-24 bg-gradient-to-b from-sage-50/30 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div 
-          className="max-w-3xl mx-auto text-center mb-20"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={containerVariants}
-        >
-          <motion.span 
-            className="text-terracotta text-lg font-medium mb-4 block"
-            variants={itemVariants}
-          >
-            Join Us
-          </motion.span>
-          <motion.h2 
-            className="text-4xl sm:text-5xl font-bold text-deep-brown mb-8"
-            variants={itemVariants}
-          >
-            Upcoming Events at {name}
-          </motion.h2>
-          <motion.p 
-            className="text-xl text-deep-brown/80 leading-relaxed"
-            variants={itemVariants}
-          >
-            Join us for transformative experiences that connect you with nature and our community. Each event is thoughtfully designed to create lasting impact.
-          </motion.p>
-        </motion.div>
+    <section id="upcoming-experiences" className="py-24 bg-gradient-to-b from-sage-50/30 to-white">
+      <div className="container mx-auto px-4">
+        <div className="max-w-3xl mx-auto text-center mb-16">
+          <h2 className="text-4xl font-bold text-deep-brown mb-6">
+            Upcoming Experiences at {name}
+          </h2>
+          <p className="text-lg text-deep-brown/70">
+            Join us for these carefully curated experiences that bring our community together
+          </p>
+        </div>
 
-        <motion.div 
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={containerVariants}
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {events.map((event) => (
-            <motion.div 
+            <ExperienceCard
               key={event.id}
-              variants={itemVariants}
-              className="transform transition-all duration-300 hover:-translate-y-1"
-            >
-              <EventCard
-                event={event}
-                showDescription={true}
-                showCapacity={true}
-              />
-            </motion.div>
+              experience={event}
+            />
           ))}
-        </motion.div>
+        </div>
 
-        <motion.div 
-          className="text-center mt-16"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={containerVariants}
-        >
-          <motion.div variants={itemVariants}>
-            <Link
-              href="/events"
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-terracotta to-terracotta-light text-white px-10 py-5 rounded-full font-medium text-lg transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 transform"
+        <div className="text-center mt-16">
+          <Link
+            href="/experiences"
+            className="inline-flex items-center gap-2 text-terracotta hover:text-terracotta/80 font-medium text-lg group"
+          >
+            View All Experiences
+            <svg
+              className="w-5 h-5 transform transition-transform group-hover:translate-x-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              View All Events
-              <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </motion.div>
-        </motion.div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 8l4 4m0 0l-4 4m4-4H3"
+              />
+            </svg>
+          </Link>
+        </div>
       </div>
     </section>
   );

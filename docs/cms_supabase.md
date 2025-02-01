@@ -636,7 +636,7 @@ export default async function FailurePage({
                     <div className="mt-6">
                         <h2>What can you do?</h2>
                         <button
-                            onClick={() => window.location.href = `/events/${template.content.event_slug}`}
+                            onClick={() => window.location.href = `/experiences/${template.content.event_slug}`}
                             className="bg-primary text-white px-6 py-2 rounded-lg"
                         >
                             Try Booking Again
@@ -646,31 +646,6 @@ export default async function FailurePage({
             </div>
         </div>
     );
-}
-import { createClient } from '@supabase/supabase-js';
-import { redirect } from 'next/navigation';
-
-export default async function PaymentRedirect({
-    params: { transactionId }
-}: {
-    params: { transactionId: string }
-}) {
-    const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_KEY!
-    );
-
-    const { data } = await supabase
-        .from('payment_transactions')
-        .select('status')
-        .eq('transaction_id', transactionId)
-        .single();
-
-    if (data?.status === 'completed') {
-        redirect('/payment/success');
-    } else {
-        redirect('/payment/failure');
-    }
 }
 ```
 

@@ -4,7 +4,7 @@ import {
     ExperienceSection,
     CommunitySection,
     LocationsSection,
-    UpcomingEventsSection,
+    UpcomingExperiencesSection,
     SeasonalSection,
     TestimonialSection,
     CallToAction
@@ -17,7 +17,7 @@ export default function HomePage() {
             <HeroSection />
             {siteConfig.homepage.showNearestEvent && <NearestEventSection />}
             <LocationsSection />
-            <UpcomingEventsSection />
+            <UpcomingExperiencesSection />
             <ExperienceSection />
             <CommunitySection />
             <SeasonalSection />

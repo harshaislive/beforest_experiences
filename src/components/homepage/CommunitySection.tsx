@@ -4,37 +4,37 @@ export const communityGlimpses = [
     {
         title: "Morning Yoga in the Forest",
         description: "Start your day with rejuvenating yoga sessions amidst the serene forest environment",
-        imageSrc: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1600&q=80",
+        imageSrc: "https://i.postimg.cc/SKszxqHF/PBR-9576.jpg",
         category: "Wellness"
     },
     {
         title: "Community Farming",
         description: "Experience the joy of growing your own food with fellow community members",
-        imageSrc: "https://images.unsplash.com/photo-1523741543316-beb7fc7023d8?auto=format&fit=crop&w=1600&q=80",
+        imageSrc: "https://i.postimg.cc/XvyDmMx3/Photo-03.jpg",
         category: "Farming"
     },
     {
         title: "Evening Campfires",
         description: "Share stories and build connections around the warmth of community campfires",
-        imageSrc: "https://images.unsplash.com/photo-1475483768296-6163e08872a1?auto=format&fit=crop&w=1600&q=80",
+        imageSrc: "https://i.postimg.cc/fL90nCS6/PBR-8762.jpg",
         category: "Community"
     },
     {
         title: "Children's Nature Play",
         description: "Watch children learn and grow through natural play experiences",
-        imageSrc: "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=1600&q=80",
+        imageSrc: "https://i.postimg.cc/T3fjVz5h/IMG-2358.avif",
         category: "Family"
     },
     {
         title: "Collective Cooking",
         description: "Cook and share meals together using fresh ingredients from our farms",
-        imageSrc: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&w=1600&q=80",
+        imageSrc: "https://i.postimg.cc/PxDJCq4c/PBR-9982.jpg",
         category: "Food"
     },
     {
         title: "Learning Workshops",
         description: "Participate in hands-on workshops about sustainable living and natural farming",
-        imageSrc: "https://images.unsplash.com/photo-1531685250784-7569952593d2?auto=format&fit=crop&w=1600&q=80",
+        imageSrc: "https://i.postimg.cc/R0yqCtcK/IMG-2562.jpg",
         category: "Education"
     }
 ];

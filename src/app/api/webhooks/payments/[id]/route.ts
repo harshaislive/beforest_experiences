@@ -6,8 +6,8 @@ import PhonepeGateway from 'phonepepg';
 const requiredEnvVars = {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY,
-    PHONEPAY_MERCHANT_ID: process.env.PHONEPAY_MERCHANT_ID,
-    PHONEPAY_SALT_KEY: process.env.PHONEPAY_SALT_KEY,
+    PHONEPE_MERCHANT_ID: process.env.PHONEPE_MERCHANT_ID,
+    PHONEPE_SALT_KEY: process.env.PHONEPE_SALT_KEY,
     PHONEPE_SALT_INDEX: process.env.PHONEPE_SALT_INDEX || '1',
 } as const;
 
@@ -25,10 +25,10 @@ const supabase = createClient(
 
 // Initialize PhonePe gateway
 const gateway = new PhonepeGateway({
-    merchantId: requiredEnvVars.PHONEPAY_MERCHANT_ID!,
-    saltKey: requiredEnvVars.PHONEPAY_SALT_KEY!,
+    merchantId: 'PGTESTPAYUAT',
+    saltKey: requiredEnvVars.PHONEPE_SALT_KEY!,
     saltIndex: parseInt(requiredEnvVars.PHONEPE_SALT_INDEX, 10),
-    isDev: process.env.NODE_ENV === 'development'
+    isDev: true  // Force sandbox mode
 });
 
 export async function POST(

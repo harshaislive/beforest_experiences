@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import PhonepeGateway from 'phonepepg';
 
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY || !process.env.PHONEPAY_MERCHANT_ID || !process.env.PHONEPAY_SALT_KEY || !process.env.NEXT_PUBLIC_APP_URL) {
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY || !process.env.PHONEPE_MERCHANT_ID || !process.env.PHONEPE_SALT_KEY || !process.env.NEXT_PUBLIC_APP_URL) {
     throw new Error('Missing environment variables');
 }
 
@@ -20,9 +20,9 @@ const supabase = createClient(
 
 // Initialize PhonePe gateway
 const gateway = new PhonepeGateway({
-    merchantId: process.env.PHONEPAY_MERCHANT_ID,
-    saltKey: process.env.PHONEPAY_SALT_KEY,
-    isDev: process.env.NODE_ENV === 'development'
+    merchantId: 'PGTESTPAYUAT',
+    saltKey: process.env.PHONEPE_SALT_KEY,
+    isDev: true  // Force sandbox mode
 });
 
 export async function POST(request: Request) {

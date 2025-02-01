@@ -14,7 +14,7 @@ interface PaymentFailedPageProps {
 export async function generateMetadata({ searchParams }: PaymentFailedPageProps): Promise<Metadata> {
     if (!searchParams.id) {
         return {
-            title: 'Payment Failed | BeForest Events',
+            title: 'Payment Failed | Beforest Experiences',
             description: 'Your payment could not be processed',
             robots: {
                 index: false,
@@ -30,7 +30,7 @@ export async function generateMetadata({ searchParams }: PaymentFailedPageProps)
             .from('registrations')
             .select(`
                 *,
-                events (
+                experiences (
                     title
                 )
             `)
@@ -39,7 +39,7 @@ export async function generateMetadata({ searchParams }: PaymentFailedPageProps)
 
         if (!registration) {
             return {
-                title: 'Payment Failed | BeForest Events',
+                title: 'Payment Failed | Beforest Experiences',
                 description: 'The requested payment information could not be found',
                 robots: {
                     index: false,
@@ -49,8 +49,8 @@ export async function generateMetadata({ searchParams }: PaymentFailedPageProps)
         }
 
         return {
-            title: `Payment Failed - ${registration.events.title} | BeForest Events`,
-            description: `Your payment for ${registration.events.title} could not be processed`,
+            title: `Payment Failed - ${registration.experiences.title} | Beforest Experiences`,
+            description: `Your payment for ${registration.experiences.title} could not be processed`,
             robots: {
                 index: false,
                 follow: true
@@ -59,7 +59,7 @@ export async function generateMetadata({ searchParams }: PaymentFailedPageProps)
     } catch (error) {
         console.error('Error fetching registration for metadata:', error);
         return {
-            title: 'Payment Failed | BeForest Events',
+            title: 'Payment Failed | Beforest Experiences',
             description: 'Your payment could not be processed',
             robots: {
                 index: false,
@@ -81,9 +81,8 @@ export default async function PaymentFailedPage({ searchParams }: PaymentFailedP
         .from('registrations')
         .select(`
             *,
-            events (
-                title,
-                slug
+            experiences (
+                title
             )
         `)
         .eq('id', id)
@@ -105,12 +104,12 @@ export default async function PaymentFailedPage({ searchParams }: PaymentFailedP
                         </div>
                         <h1 className="text-3xl font-bold text-deep-brown mb-4">Payment Failed</h1>
                         <p className="text-lg text-deep-brown/70 mb-8">
-                            We were unable to process your payment for {registration.events.title}.
+                            We were unable to process your payment for {registration.experiences.title}.
                             Please try again or contact support if the problem persists.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <Link
-                                href={`/events/${registration.events.slug}`}
+                                href={`/experiences/${registration.experiences.slug}`}
                                 className="inline-flex items-center justify-center px-6 py-3 bg-terracotta hover:bg-terracotta/90 text-white rounded-lg font-medium transition-colors"
                             >
                                 Try Payment Again

@@ -7,67 +7,87 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_KEY!,
     {
         auth: {
-            autoRefreshToken: false,
             persistSession: false
         }
     }
 );
 
+interface BookingDetails {
+    experience_id: string;
+    total_amount: number;
+    pricing: Array<{
+        pricing_id: string;
+        quantity: number;
+        amount: number;
+    }>;
+    food?: Array<{
+        food_option_id: string;
+        quantity: number;
+        amount: number;
+    }>;
+    dietary_restrictions?: string;
+    emergency_contact: {
+        name: string;
+        phone: string;
+        relation: string;
+    };
+}
+
+interface PersonalInfo {
+    full_name: string;
+    email: string;
+    phone: string;
+    newsletter_consent: boolean;
+}
+
+interface PricingItem {
+    pricing_id: string;
+    quantity: number;
+    amount: number;
+}
+
+interface FoodItem {
+    food_option_id: string;
+    quantity: number;
+    amount: number;
+}
+
 export async function POST(request: Request) {
     try {
-        const data = await request.json();
-        const { personal_info, booking_details } = data;
+        const body = await request.json();
+        const { personal_info, booking_details } = body;
 
-        console.log('Received registration request:', { personal_info, booking_details });
+        console.log('Creating registration with:', {
+            personal_info: {
+                ...personal_info,
+                email: personal_info.email,
+                phone: `****${personal_info.phone.slice(-4)}`
+            },
+            booking_details: {
+                experience_id: booking_details.experience_id,
+                total_amount: booking_details.total_amount,
+                pricing_count: booking_details.pricing?.length,
+                food_count: booking_details.food?.length
+            }
+        });
 
         // Validate required fields
-        if (!personal_info?.full_name || !personal_info?.email || !personal_info?.phone) {
+        if (!personal_info?.email || !booking_details?.experience_id) {
             return NextResponse.json(
-                { error: 'Missing required personal information' },
+                { error: 'Missing required fields' },
                 { status: 400 }
             );
         }
 
-        if (!booking_details?.event_id || !booking_details?.pricing || booking_details.pricing.length === 0) {
+        // Validate booking details structure
+        if (!Array.isArray(booking_details.pricing) || booking_details.pricing.length === 0) {
             return NextResponse.json(
-                { error: 'Missing required booking details' },
+                { error: 'Invalid pricing details' },
                 { status: 400 }
             );
         }
 
-        // Check event capacity
-        const { data: event, error: eventError } = await supabase
-            .from('events')
-            .select('total_capacity, current_participants')
-            .eq('id', booking_details.event_id)
-            .single();
-
-        if (eventError) {
-            console.error('Error fetching event:', eventError);
-            return NextResponse.json(
-                { error: 'Event not found or database error', details: eventError.message },
-                { status: 404 }
-            );
-        }
-
-        if (!event) {
-            return NextResponse.json(
-                { error: 'Event not found' },
-                { status: 404 }
-            );
-        }
-
-        const totalTickets = booking_details.pricing.reduce((sum: number, item: { quantity: number }) => sum + item.quantity, 0);
-        const remainingCapacity = event.total_capacity - event.current_participants;
-
-        if (totalTickets > remainingCapacity) {
-            return NextResponse.json(
-                { error: 'Not enough tickets available', details: `Only ${remainingCapacity} tickets remaining` },
-                { status: 400 }
-            );
-        }
-
-        // Check if user exists or create a new one
+        // Get or create user
         const { data: existingUser, error: userError } = await supabase
             .from('users')
             .select('id')
@@ -75,11 +95,10 @@ export async function POST(request: Request) {
             .single();
 
         let userId;
-        if (existingUser) {
-            userId = existingUser.id;
-        } else {
-            // Create a new user
-            const { data: newUser, error: createUserError } = await supabase
+
+        if (userError) {
+            // Create new user
+            const { data: newUser, error: createError } = await supabase
                 .from('users')
                 .insert({
                     email: personal_info.email,
@@ -89,70 +108,73 @@ export async function POST(request: Request) {
                 .select('id')
                 .single();
 
-            if (createUserError) {
-                console.error('Error creating user:', createUserError);
+            if (createError) {
+                console.error('Error creating user:', createError);
                 return NextResponse.json(
-                    { error: 'Failed to create user', details: createUserError.message },
+                    { error: 'Failed to create user' },
                     { status: 500 }
                 );
             }
+
             userId = newUser.id;
+        } else {
+            userId = existingUser.id;
         }
 
-        // Create registration record
+        // Create registration with properly structured booking details
+        const registrationData = {
+            user_id: userId,
+            experience_id: booking_details.experience_id,
+            total_amount: booking_details.total_amount,
+            payment_status: 'pending',
+            booking_details: {
+                pricing: booking_details.pricing.map((item: PricingItem) => ({
+                    pricing_id: item.pricing_id,
+                    quantity: item.quantity,
+                    amount: item.amount
+                })),
+                food: booking_details.food?.map((item: FoodItem) => ({
+                    food_option_id: item.food_option_id,
+                    quantity: item.quantity,
+                    amount: item.amount
+                })) || [],
+                dietary_restrictions: booking_details.dietary_restrictions || '',
+                emergency_contact: {
+                    name: booking_details.emergency_contact.name,
+                    phone: booking_details.emergency_contact.phone,
+                    relation: booking_details.emergency_contact.relation
+                }
+            }
+        };
+
         const { data: registration, error: registrationError } = await supabase
             .from('registrations')
-            .insert({
-                user_id: userId, // Now we have a valid user ID
-                event_id: booking_details.event_id,
-                total_amount: booking_details.total_amount,
-                payment_status: 'pending',
-                booking_details: {
-                    personal_info: {
-                        full_name: personal_info.full_name,
-                        email: personal_info.email,
-                        phone: personal_info.phone,
-                        newsletter_consent: personal_info.newsletter_consent
-                    },
-                    tickets: booking_details.pricing,
-                    food_items: booking_details.food || [],
-                    dietary_restrictions: booking_details.dietary_restrictions || '',
-                    emergency_contact: booking_details.emergency_contact
-                }
-            })
-            .select()
+            .insert(registrationData)
+            .select('*')
             .single();
 
         if (registrationError) {
-            console.error('Registration error:', registrationError);
+            console.error('Error creating registration:', registrationError);
             return NextResponse.json(
-                { error: 'Failed to create registration', details: registrationError.message },
+                { error: 'Failed to create registration' },
                 { status: 500 }
             );
         }
 
-        // Update event participants count
-        const { error: updateError } = await supabase
-            .from('events')
-            .update({
-                current_participants: event.current_participants + totalTickets
-            })
-            .eq('id', booking_details.event_id);
-
-        if (updateError) {
-            console.error('Error updating event participants:', updateError);
-            // Don't fail the registration, but log the error
-            // We might want to implement a background job to retry this update
-        }
+        console.log('Registration created successfully:', {
+            id: registration.id,
+            user_id: registration.user_id,
+            booking_details: {
+                pricing_count: registration.booking_details.pricing?.length,
+                food_count: registration.booking_details.food?.length
+            }
+        });
 
         return NextResponse.json({ registration });
-    } catch (error) {
-        console.error('Unexpected error during registration:', error);
+    } catch (error: any) {
+        console.error('Unexpected error creating registration:', error);
         return NextResponse.json(
-            { 
-                error: 'An unexpected error occurred during registration',
-                details: error instanceof Error ? error.message : 'Unknown error'
-            },
+            { error: 'Internal server error' },
             { status: 500 }
         );
     }
