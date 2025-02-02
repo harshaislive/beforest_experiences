@@ -61,7 +61,7 @@ export class PaymentService {
         registrationId: string;
         amount: number;
         userId: string;
-        mobileNumber?: string;
+        mobileNumber: string;
     }) {
         let transactionId: string | null = null;
 

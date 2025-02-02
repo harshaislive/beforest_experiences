@@ -61,6 +61,22 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { registrationId, amount, userId, mobileNumber } = body;
 
+        // Validate required fields
+        if (!registrationId || !amount || !userId || !mobileNumber) {
+            return NextResponse.json(
+                { error: 'Missing required fields: registrationId, amount, userId, and mobileNumber are required' },
+                { status: 400 }
+            );
+        }
+
+        // Validate mobile number format (10 digits)
+        if (!/^\d{10}$/.test(mobileNumber.replace(/[^0-9]/g, ''))) {
+            return NextResponse.json(
+                { error: 'Invalid mobile number format. Please provide a 10-digit mobile number.' },
+                { status: 400 }
+            );
+        }
+
         console.log('Payment initiation request:', {
             registrationId,
             amount,
