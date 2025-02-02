@@ -155,13 +155,25 @@ export default function ExperienceDetails({
                                 </div>
                             </div>
 
-                            {/* Booking Button */}
-                            <button
-                                onClick={() => setIsBookingOpen(true)}
-                                className="w-full bg-terracotta hover:bg-terracotta/90 text-white px-6 py-4 rounded-xl text-lg font-semibold transition-all active:bg-terracotta/80 shadow-md hover:shadow-lg"
-                            >
-                                Book Now
-                            </button>
+                            {/* Booking Button - Mobile Sticky */}
+                            <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-deep-brown/10 shadow-lg z-30">
+                                <button
+                                    onClick={() => setIsBookingOpen(true)}
+                                    className="w-full bg-terracotta hover:bg-terracotta/90 text-white px-6 py-4 rounded-xl text-lg font-semibold transition-all active:bg-terracotta/80"
+                                >
+                                    Book Now
+                                </button>
+                            </div>
+
+                            {/* Booking Button - Desktop */}
+                            <div className="hidden md:block">
+                                <button
+                                    onClick={() => setIsBookingOpen(true)}
+                                    className="w-full bg-terracotta hover:bg-terracotta/90 text-white px-6 py-4 rounded-xl text-lg font-semibold transition-all active:bg-terracotta/80 shadow-md hover:shadow-lg"
+                                >
+                                    Book Now
+                                </button>
+                            </div>
 
                             {/* Additional Info */}
                             <div className="mt-6 pt-6 border-t border-deep-brown/10">

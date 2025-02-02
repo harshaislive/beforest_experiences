@@ -73,7 +73,7 @@ export default function Footer() {
 
   return (
     <>
-      <footer className="bg-gradient-to-b from-deep-brown to-deep-brown-light text-soft-beige">
+      <footer className="bg-gradient-to-b from-deep-brown to-deep-brown-light text-soft-beige pb-[88px] md:pb-8">
         {/* Newsletter Section */}
         <div className="max-w-7xl mx-auto pt-16 pb-8 px-4 sm:px-6 lg:px-8">
           <div className="bg-deep-brown-light/30 rounded-2xl p-8 backdrop-blur-sm">
