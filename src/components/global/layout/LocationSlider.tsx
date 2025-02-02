@@ -32,7 +32,8 @@ export default function LocationSlider({ onLocationClick }: LocationSliderProps)
 
     const getLocationImage = (location: Location) => {
         const heroImage = location.location_images?.find(img => img.is_hero);
-        return heroImage?.image_url || location.location_images?.[0]?.image_url || '/placeholder.jpg';
+        const firstImage = location.location_images?.[0];
+        return heroImage?.image_url || firstImage?.image_url || '/images/locations-placeholder.jpg';
     };
 
     return (
@@ -60,6 +61,12 @@ export default function LocationSlider({ onLocationClick }: LocationSliderProps)
                                 alt={locations[currentIndex].name}
                                 fill
                                 className="object-cover"
+                                sizes="(max-width: 768px) 100vw, 33vw"
+                                priority
+                                onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+                                    const target = e.currentTarget;
+                                    target.src = '/images/locations-placeholder.jpg';
+                                }}
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                             <div className="absolute bottom-0 left-0 right-0 p-4">

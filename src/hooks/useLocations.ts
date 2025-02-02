@@ -16,7 +16,19 @@ export function useLocations() {
             try {
                 const { data, error } = await supabase
                     .from('locations')
-                    .select('*')
+                    .select(`
+                        *,
+                        location_images (
+                            id,
+                            image_url,
+                            is_hero,
+                            alt_text
+                        ),
+                        highlights (
+                            title,
+                            description
+                        )
+                    `)
                     .eq('is_active', true)
                     .order('name');
 

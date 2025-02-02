@@ -48,9 +48,26 @@ console.log('PhonePe Gateway Configuration:', {
     saltIndex: parseInt(process.env.PHONEPE_SALT_INDEX || '1', 10)
 });
 
+// Add request validation
+const validatePaymentRequest = (data: any) => {
+    const requiredFields = ['registrationId', 'amount', 'customerName', 'customerEmail', 'customerPhone'];
+    const missingFields = requiredFields.filter(field => !data[field]);
+    
+    if (missingFields.length > 0) {
+        throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+    }
+
+    if (data.amount <= 0) {
+        throw new Error('Amount must be greater than 0');
+    }
+};
+
 export async function POST(request: Request) {
     try {
-        const { registrationId, amount, customerName, customerEmail, customerPhone } = await request.json();
+        const data = await request.json();
+        validatePaymentRequest(data);
+        
+        const { registrationId, amount, customerName, customerEmail, customerPhone } = data;
 
         // Get registration details
         const { data: registration, error: registrationError } = await supabase
@@ -60,15 +77,16 @@ export async function POST(request: Request) {
             .single();
 
         if (registrationError || !registration) {
+            console.error('Registration error:', registrationError);
             return NextResponse.json(
                 { error: 'Registration not found' },
                 { status: 404 }
             );
         }
 
-        // Create a unique transaction ID
+        // Create a unique transaction ID with more entropy
         const timestamp = Date.now();
-        const random = Math.random().toString(36).substring(2, 8);
+        const random = crypto.randomUUID().replace(/-/g, '').substring(0, 8);
         const merchantTransactionId = `TR${timestamp}_${random}_${registrationId}`;
 
         // Update registration with transaction ID
@@ -98,6 +116,11 @@ export async function POST(request: Request) {
                 transaction_id: merchantTransactionId,
                 amount: amount,
                 status: 'pending',
+                customer_details: {
+                    name: customerName,
+                    email: customerEmail,
+                    phone: customerPhone
+                },
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             });
@@ -110,43 +133,44 @@ export async function POST(request: Request) {
             );
         }
 
-        // Initialize payment
-        console.log('Initiating payment with request:', {
-            amount: amount * 100,
-            merchantTransactionId,
-            merchantUserId: registration.user_id,
-            redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?id=${registrationId}`,
-            callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/payments/${registrationId}`,
-            mobileNumber: customerPhone
-        });
+        // Initialize payment with better error handling
+        try {
+            const paymentResponse = await gateway.initPayment({
+                amount: amount * 100, // Convert to paisa
+                merchantTransactionId,
+                merchantUserId: registration.user_id,
+                redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?id=${registrationId}`,
+                callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/payments/${registrationId}`,
+                mobileNumber: customerPhone,
+                deviceContext: {
+                    deviceOS: 'WEB'
+                }
+            });
 
-        const paymentResponse = await gateway.initPayment({
-            amount: amount * 100, // Convert to paisa
-            merchantTransactionId,
-            merchantUserId: registration.user_id,
-            redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?id=${registrationId}`,
-            callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/payments/${registrationId}`,
-            mobileNumber: customerPhone
-        });
+            // Store the initial payment response
+            await supabase
+                .from('payment_transactions')
+                .update({
+                    payment_response: paymentResponse,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('transaction_id', merchantTransactionId);
 
-        // Store the initial payment response
-        await supabase
-            .from('payment_transactions')
-            .update({
-                payment_response: paymentResponse,
-                updated_at: new Date().toISOString()
-            })
-            .eq('transaction_id', merchantTransactionId);
+            if (!paymentResponse.success) {
+                throw new Error(paymentResponse.message || 'Payment initialization failed');
+            }
 
-        console.log('PhonePe payment response:', {
-            success: paymentResponse.success,
-            code: paymentResponse.code,
-            message: paymentResponse.message,
-            data: paymentResponse.data
-        });
+            return NextResponse.json({
+                success: true,
+                registration,
+                redirectUrl: paymentResponse.data.data.instrumentResponse.redirectInfo.url,
+                transactionId: merchantTransactionId
+            });
 
-        if (!paymentResponse.success) {
-            // Update registration and transaction status to failed
+        } catch (error: any) {
+            console.error('PhonePe payment error:', error);
+            
+            // Update status to failed
             await Promise.all([
                 supabase
                     .from('registrations')
@@ -159,78 +183,31 @@ export async function POST(request: Request) {
                     .from('payment_transactions')
                     .update({
                         status: 'failed',
+                        error_details: {
+                            message: error.message,
+                            timestamp: new Date().toISOString()
+                        },
                         updated_at: new Date().toISOString()
                     })
                     .eq('transaction_id', merchantTransactionId)
             ]);
 
-            // If it's a rate limit error, add a delay and retry once
-            if (paymentResponse.code === 'TOO_MANY_REQUESTS') {
-                console.log('Rate limited, waiting 5 seconds before retry...');
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                
-                const retryTransactionId = `RETRY_${merchantTransactionId}`;
-                
-                console.log('Retrying payment initiation...');
-                const retryResponse = await gateway.initPayment({
-                    amount: amount * 100,
-                    merchantTransactionId: retryTransactionId,
-                    merchantUserId: registration.user_id,
-                    redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?id=${registrationId}`,
-                    callbackUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/payments/${registrationId}`,
-                    mobileNumber: customerPhone
-                });
-                
-                if (retryResponse.success) {
-                    // Update registration and create new transaction record for retry
-                    await Promise.all([
-                        supabase
-                            .from('registrations')
-                            .update({
-                                payment_status: 'pending',
-                                transaction_id: retryTransactionId,
-                                updated_at: new Date().toISOString()
-                            })
-                            .eq('id', registrationId),
-                        supabase
-                            .from('payment_transactions')
-                            .insert({
-                                registration_id: registrationId,
-                                transaction_id: retryTransactionId,
-                                amount: amount,
-                                status: 'pending',
-                                payment_response: retryResponse,
-                                created_at: new Date().toISOString(),
-                                updated_at: new Date().toISOString()
-                            })
-                    ]);
-
-                    return NextResponse.json({
-                        success: true,
-                        registration,
-                        redirectUrl: retryResponse.data.data.instrumentResponse.redirectInfo.url,
-                        transactionId: retryTransactionId
-                    });
-                }
-            }
-            
             return NextResponse.json(
-                { error: 'Payment initiation failed', details: paymentResponse.message },
+                { 
+                    error: 'Payment initialization failed',
+                    details: error.message
+                },
                 { status: 400 }
             );
         }
 
-        return NextResponse.json({
-            success: true,
-            registration,
-            redirectUrl: paymentResponse.data.data.instrumentResponse.redirectInfo.url,
-            transactionId: merchantTransactionId
-        });
-
-    } catch (error) {
+    } catch (error: any) {
         console.error('Payment initiation error:', error);
         return NextResponse.json(
-            { error: 'Failed to initiate payment' },
+            { 
+                error: 'Failed to initiate payment',
+                details: error.message
+            },
             { status: 500 }
         );
     }

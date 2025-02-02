@@ -26,7 +26,10 @@ interface PaymentRequest {
     merchantUserId: string;
     redirectUrl: string;
     callbackUrl: string;
-    mobileNumber?: string;
+    mobileNumber: string;
+    deviceContext?: {
+        deviceOS: 'ANDROID' | 'IOS' | 'WEB';
+    };
 }
 
 interface PaymentResponse {
