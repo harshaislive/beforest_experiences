@@ -39,7 +39,7 @@ const LocationsGrid = ({ locations }: { locations: Location[] }) => (
                     name={location.name}
                     slug={location.slug}
                     imageUrl={heroImage}
-                    description={location.description}
+                    description={location.description || location.highlights?.[0]?.description || `Discover the beauty of ${location.name}`}
                     hasEvents={upcomingEventCount > 0}
                     eventCount={totalEventCount}
                 />
