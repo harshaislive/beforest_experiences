@@ -156,13 +156,15 @@ export default function ExperienceDetails({
                             </div>
 
                             {/* Booking Button - Mobile Sticky */}
-                            <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-deep-brown/10 shadow-lg z-30">
-                                <button
-                                    onClick={() => setIsBookingOpen(true)}
-                                    className="w-full bg-terracotta hover:bg-terracotta/90 text-white px-6 py-4 rounded-xl text-lg font-semibold transition-all active:bg-terracotta/80"
-                                >
-                                    Book Now
-                                </button>
+                            <div className="md:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-deep-brown/10 shadow-lg z-[100]">
+                                <div className="container mx-auto px-4">
+                                    <button
+                                        onClick={() => setIsBookingOpen(true)}
+                                        className="w-full bg-terracotta hover:bg-terracotta/90 text-white px-6 py-4 rounded-xl text-lg font-semibold transition-all active:bg-terracotta/80"
+                                    >
+                                        Book Now
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Booking Button - Desktop */}
