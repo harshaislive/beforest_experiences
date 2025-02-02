@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useLocations } from '@/hooks/useLocations';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Location } from '@/lib/types';
 
 interface LocationSliderProps {
     onLocationClick?: () => void;
@@ -29,6 +30,11 @@ export default function LocationSlider({ onLocationClick }: LocationSliderProps)
 
     if (!locations.length) return null;
 
+    const getLocationImage = (location: Location) => {
+        const heroImage = location.location_images?.find(img => img.is_hero);
+        return heroImage?.image_url || location.location_images?.[0]?.image_url || '/placeholder.jpg';
+    };
+
     return (
         <div className="mt-8 px-6">
             <h3 className="text-deep-brown/70 text-sm font-medium uppercase tracking-wider mb-4">
@@ -50,7 +56,7 @@ export default function LocationSlider({ onLocationClick }: LocationSliderProps)
                             className="block relative h-full group"
                         >
                             <Image
-                                src={locations[currentIndex].cover_image || '/placeholder.jpg'}
+                                src={getLocationImage(locations[currentIndex])}
                                 alt={locations[currentIndex].name}
                                 fill
                                 className="object-cover"
@@ -61,7 +67,7 @@ export default function LocationSlider({ onLocationClick }: LocationSliderProps)
                                     {locations[currentIndex].name}
                                 </h4>
                                 <p className="text-white/80 text-sm line-clamp-2">
-                                    {locations[currentIndex].description}
+                                    {locations[currentIndex].highlights?.[0]?.description || 'Discover this beautiful location'}
                                 </p>
                             </div>
                             <div className="absolute inset-0 bg-terracotta/10 opacity-0 group-hover:opacity-100 transition-opacity" />

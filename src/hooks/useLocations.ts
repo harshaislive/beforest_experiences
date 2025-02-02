@@ -1,40 +1,36 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+import { Location } from '@/lib/types';
 
-export interface Location {
-  id: number;
-  name: string;
-  slug: string;
-  is_active: boolean;
-}
+const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export function useLocations() {
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+    const [locations, setLocations] = useState<Location[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchLocations() {
-      try {
-        const { data, error } = await supabase
-          .from('locations')
-          .select('id, name, slug, is_active')
-          .eq('is_active', true)
-          .order('name');
+    useEffect(() => {
+        const fetchLocations = async () => {
+            try {
+                const { data, error } = await supabase
+                    .from('locations')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('name');
 
-        if (error) throw error;
+                if (error) throw error;
+                setLocations(data || []);
+            } catch (error) {
+                console.error('Error fetching locations:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-        setLocations(data || []);
-      } catch (err) {
-        console.error('Error fetching locations:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch locations');
-      } finally {
-        setIsLoading(false);
-      }
-    }
+        fetchLocations();
+    }, []);
 
-    fetchLocations();
-  }, []);
-
-  return { locations, isLoading, error };
+    return { locations, isLoading };
 } 
