@@ -516,12 +516,20 @@ export default async function PaymentResultPage({ params, searchParams }: Paymen
         
         if (paymentStatus === PAYMENT_STATUS.SUCCESS) {
             actualStatus = PAYMENT_STATUS.SUCCESS;
-        } else if (paymentStatus === PAYMENT_STATUS.FAILED) {
+        } else if (paymentStatus === PAYMENT_STATUS.FAILED || status === 'failed') {
             actualStatus = PAYMENT_STATUS.FAILED;
+            // Log additional details for failed payments
+            console.log('Payment failed:', {
+                registrationId: registration.id,
+                transactionId: registration.transaction_id,
+                paymentStatus,
+                requestedStatus: status,
+                paymentTransactions: registration.payment_transactions
+            });
         }
 
         // If we're on the wrong status page, redirect
-        if (status !== actualStatus) {
+        if (status !== actualStatus && status !== 'failed') {
             // Construct the path first
             const path = `/payment/${actualStatus}`;
             

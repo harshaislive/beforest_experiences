@@ -45,13 +45,13 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: `
               default-src 'self';
-              script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.phonepe.com;
+              script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.phonepe.com https://mercury-t2.phonepe.com;
               style-src 'self' 'unsafe-inline';
               img-src 'self' data: https: blob:;
               font-src 'self';
               object-src 'none';
-              connect-src 'self' https://api.phonepe.com https://*.supabase.co;
-              frame-src 'self' https://api.phonepe.com;
+              connect-src 'self' https://*.phonepe.com https://mercury-t2.phonepe.com https://*.supabase.co;
+              frame-src 'self' https://*.phonepe.com https://mercury-t2.phonepe.com;
               frame-ancestors 'none';
               form-action 'self';
               base-uri 'self';

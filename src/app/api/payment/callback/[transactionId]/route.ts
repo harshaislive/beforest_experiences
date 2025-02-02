@@ -132,6 +132,13 @@ export async function POST(
         const { transactionId } = params;
         const contentType = request.headers.get('content-type');
 
+        // Log incoming request details
+        console.log('Payment callback received:', {
+            transactionId,
+            contentType,
+            headers: Object.fromEntries(request.headers)
+        });
+
         // Parse request body based on content type
         let response: any;
         if (contentType?.includes('application/x-www-form-urlencoded')) {
@@ -152,10 +159,10 @@ export async function POST(
             }
         }
 
-        console.log('Payment callback POST received:', {
+        // Log parsed response
+        console.log('Parsed payment response:', {
             transactionId,
-            response,
-            headers: Object.fromEntries(request.headers)
+            response
         });
 
         await logPaymentEvent(transactionId, 'callback_received', {
@@ -165,8 +172,10 @@ export async function POST(
 
         // Validate request format
         if (!response.response) {
+            const error = 'Missing response parameter';
+            console.error('Invalid callback request:', { error, response });
             await logPaymentEvent(transactionId, 'invalid_request', {
-                error: 'Missing response parameter',
+                error,
                 response
             });
             return NextResponse.redirect(createRedirectUrl(transactionId, '/payment/failed'));
@@ -180,6 +189,10 @@ export async function POST(
             .single();
 
         if (transactionError || !transaction) {
+            console.error('Transaction fetch error:', {
+                error: transactionError,
+                transactionId
+            });
             await logPaymentEvent(transactionId, 'transaction_fetch_error', {
                 error: transactionError
             });
@@ -188,6 +201,10 @@ export async function POST(
 
         // If already completed, redirect to success page
         if (transaction.status === 'completed') {
+            console.log('Duplicate callback received:', {
+                transactionId,
+                currentStatus: transaction.status
+            });
             await logPaymentEvent(transactionId, 'duplicate_callback', {
                 currentStatus: transaction.status
             });
@@ -195,36 +212,42 @@ export async function POST(
         }
 
         let isSuccess = false;
+        let decodedResponse: any;
+
         try {
             // Try to decode base64 response
-            const decodedResponse = JSON.parse(
+            decodedResponse = JSON.parse(
                 Buffer.from(response.response, 'base64').toString()
             );
             isSuccess = decodedResponse.code === 'PAYMENT_SUCCESS';
-
-            // Update payment status
-            await updatePaymentStatus(transactionId, transaction.registration_id, isSuccess, decodedResponse);
-
-            await logPaymentEvent(transactionId, 'callback_processed', {
-                success: isSuccess,
-                decodedResponse
+            console.log('Decoded payment response:', {
+                transactionId,
+                isSuccess,
+                responseCode: decodedResponse.code
             });
         } catch (decodeError) {
+            console.log('Base64 decode failed, trying direct JSON:', {
+                transactionId,
+                error: decodeError
+            });
             // If base64 decode fails, try direct JSON parse
             try {
-                const jsonResponse = typeof response.response === 'string' 
+                decodedResponse = typeof response.response === 'string' 
                     ? JSON.parse(response.response)
                     : response.response;
-                isSuccess = jsonResponse.code === 'PAYMENT_SUCCESS';
-
-                // Update payment status
-                await updatePaymentStatus(transactionId, transaction.registration_id, isSuccess, jsonResponse);
-
-                await logPaymentEvent(transactionId, 'callback_processed', {
-                    success: isSuccess,
-                    jsonResponse
+                isSuccess = decodedResponse.code === 'PAYMENT_SUCCESS';
+                console.log('Parsed JSON response:', {
+                    transactionId,
+                    isSuccess,
+                    responseCode: decodedResponse.code
                 });
             } catch (jsonError) {
+                console.error('Response parse error:', {
+                    transactionId,
+                    decodeError,
+                    jsonError,
+                    response
+                });
                 await logPaymentEvent(transactionId, 'response_parse_error', {
                     decodeError,
                     jsonError,
@@ -234,10 +257,22 @@ export async function POST(
             }
         }
 
+        // Update payment status
+        await updatePaymentStatus(transactionId, transaction.registration_id, isSuccess, decodedResponse);
+        await logPaymentEvent(transactionId, 'callback_processed', {
+            success: isSuccess,
+            response: decodedResponse
+        });
+
         // Redirect based on payment status
-        return NextResponse.redirect(createRedirectUrl(transactionId, `/payment/${isSuccess ? 'completed' : 'failed'}`));
+        const redirectPath = createRedirectUrl(transactionId, `/payment/${isSuccess ? 'completed' : 'failed'}`);
+        console.log('Redirecting to:', { redirectPath, isSuccess });
+        return NextResponse.redirect(redirectPath);
     } catch (error) {
-        console.error('Payment callback error:', error);
+        console.error('Payment callback error:', {
+            transactionId: params.transactionId,
+            error
+        });
         await logPaymentEvent(params.transactionId, 'callback_error', { error });
         return NextResponse.redirect(createRedirectUrl(params.transactionId, '/payment/failed'));
     }
