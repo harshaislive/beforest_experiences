@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useLocations } from '@/contexts/LocationContext';
 import LocationsDropdown from './LocationsDropdown';
+import LocationSlider from './LocationSlider';
 
 export default function Header() {
   const { locations, isLoading: isLoadingLocations } = useLocations();
@@ -224,6 +225,9 @@ export default function Header() {
                   Contact
                 </Link>
               </div>
+
+              {/* Location Slider */}
+              <LocationSlider onLocationClick={() => setMobileMenuOpen(false)} />
             </div>
           </div>
           <div className="p-6 border-t border-deep-brown/10">

@@ -39,7 +39,8 @@ export interface Location {
     id: string;
     name: string;
     slug: string;
-    description: string;
+    cover_image?: string;
+    description?: string;
     is_active: boolean;
     features: string[];
     highlights: Array<{
