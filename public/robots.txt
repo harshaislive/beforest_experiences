@@ -1,0 +1,14 @@
+# Allow all crawlers
+User-agent: *
+
+# Prevent crawling of API routes and payment processing pages
+Disallow: /api/
+Disallow: /payments/confirmation
+
+# Allow crawling of main content
+Allow: /experiences/
+Allow: /locations/
+Allow: /
+
+# Sitemap location
+Sitemap: https://beforest.in/sitemap.xml 

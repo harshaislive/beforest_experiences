@@ -1,0 +1,218 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --soft-beige: 246, 245, 243;
+        --deep-brown: 44, 36, 36;
+        --terracotta: 186, 84, 43;
+    }
+
+    body {
+        @apply text-deep-brown antialiased;
+        font-feature-settings: "ss01", "ss02", "cv01", "cv02", "cv03";
+    }
+
+    @keyframes draw {
+        to {
+            stroke-dashoffset: 0;
+        }
+    }
+
+    @keyframes fadeSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+}
+
+@layer components {
+    .prose {
+        @apply max-w-none;
+    }
+
+    .prose h1 {
+        @apply text-4xl font-bold mb-8 leading-tight;
+        background: linear-gradient(135deg, var(--deep-brown) 0%, var(--terracotta) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .prose h2 {
+        @apply text-2xl font-semibold mt-10 mb-6 text-deep-brown;
+    }
+
+    .prose p {
+        @apply text-lg leading-relaxed mb-6 text-deep-brown opacity-80;
+    }
+
+    .prose strong {
+        @apply font-semibold text-deep-brown;
+    }
+
+    .prose ul, .prose ol {
+        @apply space-y-3 mb-8;
+    }
+
+    .prose li {
+        @apply relative pl-8 py-2;
+    }
+
+    .prose li:before {
+        @apply absolute left-0 top-1/2 -translate-y-1/2 text-terracotta;
+    }
+
+    .prose ul > li:before {
+        content: "•";
+        @apply text-2xl -translate-y-[2px];
+    }
+
+    .prose ol {
+        counter-reset: item;
+    }
+
+    .prose ol > li:before {
+        counter-increment: item;
+        content: counter(item);
+        @apply font-semibold text-lg;
+    }
+
+    .glass-card {
+        @apply bg-white bg-opacity-50 rounded-lg backdrop-blur-sm;
+        @apply shadow-[0_2px_4px_rgba(0,0,0,0.02)];
+        @apply border border-deep-brown border-opacity-5;
+        @apply transition-all duration-200;
+    }
+
+    .glass-card:hover {
+        @apply shadow-[0_4px_8px_rgba(0,0,0,0.05)];
+        @apply border-opacity-10;
+        @apply -translate-y-[1px];
+    }
+}
+
+:root {
+  --deep-brown: #2C1810;
+  --terracotta: #A0522D;
+  --forest-green: #004D2C;
+  --soft-beige: #F5F1EA;
+  
+  /* Complementary shades */
+  --deep-brown-light: #3D251C;
+  --terracotta-light: #C26B3D;
+  --forest-green-light: #006B3D;
+  --text-primary: #2C1810;
+  --text-secondary: #635D57;
+}
+
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply bg-soft-beige text-deep-brown min-h-screen;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-deep-brown font-bold;
+  }
+}
+
+@layer components {
+  .container {
+    @apply px-4 mx-auto max-w-7xl;
+  }
+
+  .btn-primary {
+    @apply bg-deep-brown text-soft-beige px-8 py-4 rounded-full font-semibold 
+           hover:bg-deep-brown-light transition-colors duration-300 inline-flex items-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply bg-soft-beige text-deep-brown border-2 border-deep-brown px-8 py-4 rounded-full font-semibold 
+           hover:bg-deep-brown hover:text-soft-beige transition-colors duration-300 inline-flex items-center gap-2;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300;
+  }
+
+  .section {
+    @apply py-16 sm:py-24;
+  }
+
+  .section-title {
+    @apply text-3xl sm:text-4xl md:text-5xl font-bold text-deep-brown mb-6 sm:mb-8;
+  }
+
+  .section-subtitle {
+    @apply text-lg sm:text-xl text-secondary mb-12 sm:mb-16 max-w-3xl mx-auto;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+/* Enhanced typography */
+.heading-xl {
+  @apply text-5xl md:text-7xl font-bold tracking-tight;
+}
+
+.heading-lg {
+  @apply text-4xl font-bold tracking-tight;
+}
+
+.heading-md {
+  @apply text-2xl font-semibold;
+}
+
+.body-lg {
+  @apply text-lg leading-relaxed;
+}
+
+.body-md {
+  @apply text-base leading-relaxed;
+}
+
+/* Touch optimizations */
+@media (hover: none) {
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+}
+
+/* Responsive image handling */
+.image-container {
+  @apply relative w-full;
+}
+
+.image-container > span {
+  @apply relative block !important;
+  height: 100% !important;
+}
