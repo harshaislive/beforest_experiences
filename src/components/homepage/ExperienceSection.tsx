@@ -6,7 +6,6 @@ type Experience = {
     description: string;
     imageUrl: string;
     altText: string;
-    slug: string;
 };
 
 const experiences: Experience[] = [
@@ -15,24 +14,21 @@ const experiences: Experience[] = [
         title: "Farm-to-Table Feasts",
         description: "Experience the joy of harvesting and cooking together. Join us for an immersive culinary journey where you'll learn about sustainable farming practices, harvest fresh ingredients, and create delicious meals with our expert chefs.",
         imageUrl: "https://i.postimg.cc/XvMgZrcS/8.jpg",
-        altText: "Farm to Table Experience",
-        slug: "farm-to-table-feasts"
+        altText: "Farm to Table Experience"
     },
     {
         id: 'nature-immersion',
         title: "Nature Immersion",
         description: "Connect deeply with the natural world through guided forest walks, meditation sessions, and wildlife observation. Learn about local flora and fauna while experiencing the therapeutic benefits of nature.",
         imageUrl: "https://i.postimg.cc/Qt21Hwr8/PBR-2100.jpg",
-        altText: "Nature Immersion Experience",
-        slug: "nature-immersion"
+        altText: "Nature Immersion Experience"
     },
     {
         id: 'cultural-celebrations',
         title: "Cultural Celebrations",
         description: "Participate in vibrant community traditions that celebrate local heritage. Immerse yourself in music, dance, crafts, and storytelling sessions that bring age-old customs to life.",
         imageUrl: "https://i.postimg.cc/ZRqRLc4G/PBR-7538.jpg",
-        altText: "Cultural Celebrations Experience",
-        slug: "cultural-celebrations"
+        altText: "Cultural Celebrations Experience"
     }
 ];
 
@@ -66,18 +62,9 @@ export default function ExperienceSection() {
                                     <h3 className="text-2xl font-bold text-deep-brown mb-3">
                                         {experience.title}
                                     </h3>
-                                    <p className="text-deep-brown/70 mb-4">
+                                    <p className="text-deep-brown/70">
                                         {experience.description}
                                     </p>
-                                    <a 
-                                        href={`/experiences/${experience.slug}`}
-                                        className="inline-flex items-center text-terracotta hover:text-terracotta/80 font-medium"
-                                    >
-                                        Learn more
-                                        <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                        </svg>
-                                    </a>
                                 </div>
                             </div>
                         </div>
